@@ -1,0 +1,59 @@
+---
+title: "Cedric Test"
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+  word_document: default
+---
+## RMD 101
+```{r setup}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+knitr::opts_knit$set(root.dir = '/Users/antoniak/Desktop/BBL/')
+require('visreg')
+```
+
+### Load data
+This is a test script for Toni to learn R-markdown/notebook.
+```{r load data}
+subjData<-readRDS("./projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_clusters.rds")
+```
+In this analysis, there are `r dim(subjData)[1]` subjects with `r dim(subjData)[2]` measures.
+
+### Create models
+
+#### GMD
+these are words
+```{r models for GMD}
+#these are words
+Model1<-lm(mprage_jlf_gmd_R_ACgG ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + averageManualRating + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+
+Model2<-lm(mprage_jlf_gmd_L_ACgG ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + averageManualRating + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+```
+
+#### Here come the figures
+```{r figures, fig.height=5, fig.width=5, message=FALSE, warning=FALSE}
+suppressMessages(visreg(Model1,'age'))
+suppressMessages(visreg(Model2,'age'))
+```
+```{r Volume}
+#Volume
+
+Model3<-lm(mprage_jlf_ct_R_ACgG ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + averageManualRating + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+
+Model4<-lm(mprage_jlf_ct_L_ACgG ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + averageManualRating + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+
+suppressMessages(visreg(Model3,'age'))
+suppressMessages(visreg(Model4,'age'))
+```
+
+```{r CT}
+Model5<-lm(mprage_jlf_vol_R_ACgG ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + averageManualRating + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+
+Model6<-lm(mprage_jlf_vol_L_ACgG ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + averageManualRating + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+
+suppressMessages(visreg(Model5,'age'))
+suppressMessages(visreg(Model6,'age'))
+```
+
+

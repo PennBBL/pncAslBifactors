@@ -1,0 +1,1 @@
+easythresh lmZ_goassessItemBifactor4FactorOverallPsy.nii.gz /data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/masks/n1895_inc1829_bin_gm_mask.nii.gz 2.3 0.05 /data/joy/BBL/studies/pnc/template/pnc_template_brain_2mm.nii.gz aslresults

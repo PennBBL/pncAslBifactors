@@ -1,0 +1,19 @@
+#Binarize the asl mask so it will be 0s and 1s instead of 0s and 1511s.
+
+#mask
+maskName=/data/joy/BBL/studies/pnc/n1601_dataFreeze2016/n1601_summaryData/pcasl/n1601_PcaslCoverageMask.nii.gz
+
+echo "Mask name is $maskName"
+
+echo ""
+
+
+#this is where the output mask goes                                                                                                                                              
+outdir=/data/joy/BBL/projects/pncT1AcrossDisorder_ASL/images
+
+echo "outdir is $outdir"
+
+echo ""
+
+fslmaths ${maskName} -thr 1510 -bin ${outdir}/n1601_PcaslCoverageMask.nii.gz
+

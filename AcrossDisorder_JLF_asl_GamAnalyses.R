@@ -1,0 +1,1025 @@
+#################
+### LOAD DATA ###
+#################
+#All n=1601 subjects (minus the exclusion criteria).
+#subjData <- readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1309_JLF_asl_subjData.rds")
+subjData <- readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1029_JLF_aslVox11andUp_subjData.rds")
+
+#Data that has been subset to include those with anxiety disorders (Agr, Gad, Ocd, Pan, Ptd, Sep, Soc, Sph) and Typically Developing, minus exclusion criteria.
+AllAnxTdSubjData <- readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1057_JLF_asl_AllAnxTdSubjData.rds")
+
+#Data that has been subset to only include those with anxiety disorders (Agr, Gad, Ocd, Pan, Ptd, Sep, Soc, Sph) (No TD), minus exclusion criteria.
+AllAnxSubjData <- readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n656_JLF_asl_AllAnxSubjData.rds")
+
+#Data that has been subset to only include those age 12 and up (for STAI analyses)
+staiSubjData <- readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n996_JLF_stai_subjData.rds")
+
+
+
+#########################################
+### LOAD LIBRARY AND CREATE VAR LISTS ###
+#########################################
+
+##Load library for nonlinear analyses
+library(mgcv)
+
+##Create lists of variables names of interest: grouped by 1) total gray matter, 2) lobes (don't include cerebellum), or 3) ROIs
+
+Asl_Gm_List <- names(subjData)[2848]
+Asl_Lobe_List <- names(subjData)[2849:2853]
+dataAslGm <- subjData[,grep("pcasl_jlf_cbf",names(subjData))]
+Asl_ROI_List <- colnames(dataAslGm)
+
+
+###################################
+###################################
+########## ASL ANALYSES  ##########
+## All Anx subjects only (no TD) ##
+###################################
+###################################
+ 
+#############################
+#### STATE TRAIT ANXIETY ####
+#############################
+
+###GM###
+#GAM model
+Asl_AllAnx_Stai_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Stai_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllAnx_Gm_State <- sapply(Asl_AllAnx_Stai_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Gm_Trait <- sapply(Asl_AllAnx_Stai_Gm, function(v) summary(v)$p.table[5,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnx_Stai_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Stai_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnx_Lobes_State <- sapply(Asl_AllAnx_Stai_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Lobes_Trait <- sapply(Asl_AllAnx_Stai_Lobes, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_AllAnx_Lobes_State_fdr <- p.adjust(Asl_AllAnx_Lobes_State,method="fdr")
+Asl_AllAnx_Lobes_Trait_fdr <- p.adjust(Asl_AllAnx_Lobes_Trait,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllAnx_Stai_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Stai_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllAnx_ROIs_State <- sapply(Asl_AllAnx_Stai_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_ROIs_Trait <- sapply(Asl_AllAnx_Stai_ROIs, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_AllAnx_ROIs_State_fdr <- p.adjust(Asl_AllAnx_ROIs_State,method="fdr")
+Asl_AllAnx_ROIs_Trait_fdr <- p.adjust(Asl_AllAnx_ROIs_Trait,method="fdr")
+
+
+
+############################
+#### TRAIT ANXIETY ONLY ####
+############################
+
+###GM###
+#GAM model
+Asl_AllAnx_Trait_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Trait_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllAnx_Gm_TraitOnly <- sapply(Asl_AllAnx_Trait_Gm, function(v) summary(v)$p.table[4,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnx_Trait_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Trait_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnx_Lobes_TraitOnly <- sapply(Asl_AllAnx_Trait_Lobes, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnx_Lobes_TraitOnly_fdr <- p.adjust(Asl_AllAnx_Lobes_TraitOnly,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllAnx_Trait_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Trait_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllAnx_ROIs_TraitOnly <- sapply(Asl_AllAnx_Trait_ROIs, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnx_ROIs_TraitOnly_fdr <- p.adjust(Asl_AllAnx_ROIs_TraitOnly,method="fdr")
+
+
+
+##############################################
+#### CORRELATED TRAITS- NOT AGE REGRESSED ####
+##############################################
+
+###GM###
+#GAM model
+Asl_AllAnx_CorrTrMood_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrPsych_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrExt_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrFear_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_CorrTrMood_Gm, summary)
+lapply(Asl_AllAnx_CorrTrPsych_Gm, summary)
+lapply(Asl_AllAnx_CorrTrExt_Gm, summary)
+lapply(Asl_AllAnx_CorrTrFear_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV) 
+Asl_AllAnx_Gm_CorrTrMood <- sapply(Asl_AllAnx_CorrTrMood_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Gm_CorrTrPsych <- sapply(Asl_AllAnx_CorrTrPsych_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Gm_CorrTrExt <- sapply(Asl_AllAnx_CorrTrExt_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Gm_CorrTrFear <- sapply(Asl_AllAnx_CorrTrFear_Gm, function(v) summary(v)$p.table[4,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnx_CorrTrMood_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrPsych_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrExt_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrFear_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+
+#Look at the model summaries
+lapply(Asl_AllAnx_CorrTrMood_Lobes, summary)
+lapply(Asl_AllAnx_CorrTrPsych_Lobes, summary)
+lapply(Asl_AllAnx_CorrTrExt_Lobes, summary)
+lapply(Asl_AllAnx_CorrTrFear_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnx_Lobes_CorrTrMood <- sapply(Asl_AllAnx_CorrTrMood_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Lobes_CorrTrPsych <- sapply(Asl_AllAnx_CorrTrPsych_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Lobes_CorrTrExt <- sapply(Asl_AllAnx_CorrTrExt_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Lobes_CorrTrFear <- sapply(Asl_AllAnx_CorrTrFear_Lobes, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnx_Lobes_CorrTrMood_fdr <- p.adjust(Asl_AllAnx_Lobes_CorrTrMood,method="fdr")
+Asl_AllAnx_Lobes_CorrTrPsych_fdr <- p.adjust(Asl_AllAnx_Lobes_CorrTrPsych,method="fdr")
+Asl_AllAnx_Lobes_CorrTrExt_fdr <- p.adjust(Asl_AllAnx_Lobes_CorrTrExt,method="fdr")
+Asl_AllAnx_Lobes_CorrTrFear_fdr <- p.adjust(Asl_AllAnx_Lobes_CorrTrFear,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllAnx_CorrTrMood_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrPsych_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrExt_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+Asl_AllAnx_CorrTrFear_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+
+#Look at the model summaries
+lapply(Asl_AllAnx_CorrTrMood_ROIs, summary)
+lapply(Asl_AllAnx_CorrTrPsych_ROIs, summary)
+lapply(Asl_AllAnx_CorrTrExt_ROIs, summary)
+lapply(Asl_AllAnx_CorrTrFear_ROIs, summary)
+
+#Create a vector p-values 
+Asl_AllAnx_ROIs_CorrTrMood <- sapply(Asl_AllAnx_CorrTrMood_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_ROIs_CorrTrPsych <- sapply(Asl_AllAnx_CorrTrPsych_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_ROIs_CorrTrExt <- sapply(Asl_AllAnx_CorrTrExt_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_ROIs_CorrTrFear <- sapply(Asl_AllAnx_CorrTrFear_ROIs, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnx_ROIs_CorrTrMood_fdr <- p.adjust(Asl_AllAnx_ROIs_CorrTrMood,method="fdr")
+Asl_AllAnx_ROIs_CorrTrPsych_fdr <- p.adjust(Asl_AllAnx_ROIs_CorrTrPsych,method="fdr")
+Asl_AllAnx_ROIs_CorrTrExt_fdr <- p.adjust(Asl_AllAnx_ROIs_CorrTrExt,method="fdr")
+Asl_AllAnx_ROIs_CorrTrFear_fdr <- p.adjust(Asl_AllAnx_ROIs_CorrTrFear,method="fdr")
+
+
+
+###################################
+#### PSYCHOPATHOLOGY BIFACTORS ####
+###################################
+
+###GM###
+#GAM model
+Asl_AllAnx_Bifactors_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Bifactors_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllAnx_Gm_Mood <- sapply(Asl_AllAnx_Bifactors_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Gm_Psych <- sapply(Asl_AllAnx_Bifactors_Gm, function(v) summary(v)$p.table[5,4])
+Asl_AllAnx_Gm_Ext <- sapply(Asl_AllAnx_Bifactors_Gm, function(v) summary(v)$p.table[6,4])
+Asl_AllAnx_Gm_Phb <- sapply(Asl_AllAnx_Bifactors_Gm, function(v) summary(v)$p.table[7,4])
+Asl_AllAnx_Gm_OverallPsy <- sapply(Asl_AllAnx_Bifactors_Gm, function(v) summary(v)$p.table[8,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnx_Bifactors_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Bifactors_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnx_Lobes_Mood <- sapply(Asl_AllAnx_Bifactors_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_Lobes_Psych <- sapply(Asl_AllAnx_Bifactors_Lobes, function(v) summary(v)$p.table[5,4])
+Asl_AllAnx_Lobes_Ext <- sapply(Asl_AllAnx_Bifactors_Lobes, function(v) summary(v)$p.table[6,4])
+Asl_AllAnx_Lobes_Phb <- sapply(Asl_AllAnx_Bifactors_Lobes, function(v) summary(v)$p.table[7,4])
+Asl_AllAnx_Lobes_OverallPsy <- sapply(Asl_AllAnx_Bifactors_Lobes, function(v) summary(v)$p.table[8,4])
+
+#FDR correct p-values
+Asl_AllAnx_Lobes_Mood_fdr <- p.adjust(Asl_AllAnx_Lobes_Mood,method="fdr")
+Asl_AllAnx_Lobes_Psych_fdr <- p.adjust(Asl_AllAnx_Lobes_Psych,method="fdr")
+Asl_AllAnx_Lobes_Ext_fdr <- p.adjust(Asl_AllAnx_Lobes_Ext,method="fdr")
+Asl_AllAnx_Lobes_Phb_fdr <- p.adjust(Asl_AllAnx_Lobes_Phb,method="fdr")
+Asl_AllAnx_Lobes_OverallPsy_fdr <- p.adjust(Asl_AllAnx_Lobes_OverallPsy,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllAnx_Bifactors_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = AllAnxSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnx_Bifactors_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllAnx_ROIs_Mood <- sapply(Asl_AllAnx_Bifactors_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnx_ROIs_Psych <- sapply(Asl_AllAnx_Bifactors_ROIs, function(v) summary(v)$p.table[5,4])
+Asl_AllAnx_ROIs_Ext <- sapply(Asl_AllAnx_Bifactors_ROIs, function(v) summary(v)$p.table[6,4])
+Asl_AllAnx_ROIs_Phb <- sapply(Asl_AllAnx_Bifactors_ROIs, function(v) summary(v)$p.table[7,4])
+Asl_AllAnx_ROIs_OverallPsy <- sapply(Asl_AllAnx_Bifactors_ROIs, function(v) summary(v)$p.table[8,4])
+
+#FDR correct p-values 
+Asl_AllAnx_ROIs_Mood_fdr <- p.adjust(Asl_AllAnx_ROIs_Mood,method="fdr")
+Asl_AllAnx_ROIs_Psych_fdr <- p.adjust(Asl_AllAnx_ROIs_Psych,method="fdr")
+Asl_AllAnx_ROIs_Ext_fdr <- p.adjust(Asl_AllAnx_ROIs_Ext,method="fdr")
+Asl_AllAnx_ROIs_Phb_fdr <- p.adjust(Asl_AllAnx_ROIs_Phb,method="fdr")
+Asl_AllAnx_ROIs_OverallPsy_fdr <- p.adjust(Asl_AllAnx_ROIs_OverallPsy,method="fdr")
+
+
+
+###############################
+###############################
+######## ASL ANALYSES  ########
+### All Anx subjects and TD ###
+###############################
+###############################
+
+###########################
+#### ALL ANXIETY VS TD ####
+###########################
+
+###GM###
+#GAM model
+Asl_AllAnxVsTd_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + AllAnxTd, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxVsTd_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_Gm_AllAnxTd <- sapply(Asl_AllAnxVsTd_Gm, function(v) summary(v)$p.table[4,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnxVsTd_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + AllAnxTd, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxVsTd_Lobes, summary)
+
+#Create a vector p-values
+Asl_Lobes_AllAnxTd <- sapply(Asl_AllAnxVsTd_Lobes, function(v) summary(v)$p.table[4,4])
+ 
+#FDR correct p-values
+Asl_Lobes_AllAnxTd_fdr <- p.adjust(Asl_Lobes_AllAnxTd,method="fdr")
+
+
+##ROIs###
+#GAM model
+Asl_AllAnxVsTd_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + AllAnxTd, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxVsTd_ROIs, summary)
+
+#Create a vector p-values
+Asl_ROIs_AllAnxTd <- sapply(Asl_AllAnxVsTd_ROIs, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_ROIs_AllAnxTd_fdr <- p.adjust(Asl_ROIs_AllAnxTd,method="fdr")
+
+
+
+##############################
+#### COARSE ANXIETY VS TD ####
+##############################
+
+###GM###
+#GAM model
+Asl_CoarseAnxVsTd_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + CoarseAnxTd, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_CoarseAnxVsTd_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_Gm_PtsdTd <- sapply(Asl_CoarseAnxVsTd_Gm, function(v) summary(v)$p.table[4,4])
+Asl_Gm_AnxTd <- sapply(Asl_CoarseAnxVsTd_Gm, function(v) summary(v)$p.table[5,4])
+
+
+###LOBES###
+#GAM model
+Asl_CoarseAnxVsTd_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + CoarseAnxTd, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_CoarseAnxVsTd_Lobes, summary)
+
+#Create a vector p-values
+Asl_Lobes_PtsdTd <- sapply(Asl_CoarseAnxVsTd_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_Lobes_AnxTd <- sapply(Asl_CoarseAnxVsTd_Lobes, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_Lobes_PtsdTd_fdr <- p.adjust(Asl_Lobes_PtsdTd,method="fdr")
+Asl_Lobes_AnxTd_fdr <- p.adjust(Asl_Lobes_AnxTd,method="fdr")
+
+
+##ROIs###
+#GAM model
+Asl_CoarseAnxVsTd_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + CoarseAnxTd, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_CoarseAnxVsTd_ROIs, summary)
+
+#Create a vector p-values
+Asl_ROIs_PtsdTd <- sapply(Asl_CoarseAnxVsTd_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_ROIs_AnxTd <- sapply(Asl_CoarseAnxVsTd_ROIs, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_ROIs_PtsdTd_fdr <- p.adjust(Asl_ROIs_PtsdTd,method="fdr")
+Asl_ROIs_AnxTd_fdr <- p.adjust(Asl_ROIs_AnxTd,method="fdr")
+
+
+
+#############################
+#### STATE TRAIT ANXIETY ####
+#############################
+
+###GM###
+#GAM model
+Asl_AllAnxTd_Stai_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Stai_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllAnxTd_Gm_State <- sapply(Asl_AllAnxTd_Stai_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Gm_Trait <- sapply(Asl_AllAnxTd_Stai_Gm, function(v) summary(v)$p.table[5,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnxTd_Stai_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Stai_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_Lobes_State <- sapply(Asl_AllAnxTd_Stai_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Lobes_Trait <- sapply(Asl_AllAnxTd_Stai_Lobes, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_Lobes_State_fdr <- p.adjust(Asl_AllAnxTd_Lobes_State,method="fdr")
+Asl_AllAnxTd_Lobes_Trait_fdr <- p.adjust(Asl_AllAnxTd_Lobes_Trait,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllAnxTd_Stai_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Stai_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_ROIs_State <- sapply(Asl_AllAnxTd_Stai_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_ROIs_Trait <- sapply(Asl_AllAnxTd_Stai_ROIs, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_ROIs_State_fdr <- p.adjust(Asl_AllAnxTd_ROIs_State,method="fdr")
+Asl_AllAnxTd_ROIs_Trait_fdr <- p.adjust(Asl_AllAnxTd_ROIs_Trait,method="fdr")
+
+
+
+############################
+#### TRAIT ANXIETY ONLY ####
+############################
+
+###GM###
+#GAM model
+Asl_AllAnxTd_Trait_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Trait_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllAnxTd_Gm_TraitOnly <- sapply(Asl_AllAnxTd_Trait_Gm, function(v) summary(v)$p.table[4,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnxTd_Trait_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Trait_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_Lobes_TraitOnly <- sapply(Asl_AllAnxTd_Trait_Lobes, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_Lobes_TraitOnly_fdr <- p.adjust(Asl_AllAnxTd_Lobes_TraitOnly,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllAnxTd_Trait_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Trait_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_ROIs_TraitOnly <- sapply(Asl_AllAnxTd_Trait_ROIs, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_ROIs_TraitOnly_fdr <- p.adjust(Asl_AllAnxTd_ROIs_TraitOnly,method="fdr")
+
+
+
+##############################################
+#### CORRELATED TRAITS- NOT AGE REGRESSED ####
+##############################################
+
+###GM###
+#GAM model
+Asl_AllAnxTd_CorrTrMood_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrPsych_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrExt_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrFear_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_CorrTrMood_Gm, summary)
+lapply(Asl_AllAnxTd_CorrTrPsych_Gm, summary)
+lapply(Asl_AllAnxTd_CorrTrExt_Gm, summary)
+lapply(Asl_AllAnxTd_CorrTrFear_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllAnxTd_Gm_CorrTrMood <- sapply(Asl_AllAnxTd_CorrTrMood_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Gm_CorrTrPsych <- sapply(Asl_AllAnxTd_CorrTrPsych_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Gm_CorrTrExt <- sapply(Asl_AllAnxTd_CorrTrExt_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Gm_CorrTrFear <- sapply(Asl_AllAnxTd_CorrTrFear_Gm, function(v) summary(v)$p.table[4,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnxTd_CorrTrMood_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrPsych_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrExt_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrFear_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_CorrTrMood_Lobes, summary)
+lapply(Asl_AllAnxTd_CorrTrPsych_Lobes, summary)
+lapply(Asl_AllAnxTd_CorrTrExt_Lobes, summary)
+lapply(Asl_AllAnxTd_CorrTrFear_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_Lobes_CorrTrMood <- sapply(Asl_AllAnxTd_CorrTrMood_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Lobes_CorrTrPsych <- sapply(Asl_AllAnxTd_CorrTrPsych_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Lobes_CorrTrExt <- sapply(Asl_AllAnxTd_CorrTrExt_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Lobes_CorrTrFear <- sapply(Asl_AllAnxTd_CorrTrFear_Lobes, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_Lobes_CorrTrMood_fdr <- p.adjust(Asl_AllAnxTd_Lobes_CorrTrMood,method="fdr")
+Asl_AllAnxTd_Lobes_CorrTrPsych_fdr <- p.adjust(Asl_AllAnxTd_Lobes_CorrTrPsych,method="fdr")
+Asl_AllAnxTd_Lobes_CorrTrExt_fdr <- p.adjust(Asl_AllAnxTd_Lobes_CorrTrExt,method="fdr")
+Asl_AllAnxTd_Lobes_CorrTrFear_fdr <- p.adjust(Asl_AllAnxTd_Lobes_CorrTrFear,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllAnxTd_CorrTrMood_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrPsych_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrExt_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+Asl_AllAnxTd_CorrTrFear_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_CorrTrMood_ROIs, summary)
+lapply(Asl_AllAnxTd_CorrTrPsych_ROIs, summary)
+lapply(Asl_AllAnxTd_CorrTrExt_ROIs, summary)
+lapply(Asl_AllAnxTd_CorrTrFear_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_ROIs_CorrTrMood <- sapply(Asl_AllAnxTd_CorrTrMood_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_ROIs_CorrTrPsych <- sapply(Asl_AllAnxTd_CorrTrPsych_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_ROIs_CorrTrExt <- sapply(Asl_AllAnxTd_CorrTrExt_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_ROIs_CorrTrFear <- sapply(Asl_AllAnxTd_CorrTrFear_ROIs, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_ROIs_CorrTrMood_fdr <- p.adjust(Asl_AllAnxTd_ROIs_CorrTrMood,method="fdr")
+Asl_AllAnxTd_ROIs_CorrTrPsych_fdr <- p.adjust(Asl_AllAnxTd_ROIs_CorrTrPsych,method="fdr")
+Asl_AllAnxTd_ROIs_CorrTrExt_fdr <- p.adjust(Asl_AllAnxTd_ROIs_CorrTrExt,method="fdr")
+Asl_AllAnxTd_ROIs_CorrTrFear_fdr <- p.adjust(Asl_AllAnxTd_ROIs_CorrTrFear,method="fdr")
+
+
+
+###################################
+#### PSYCHOPATHOLOGY BIFACTORS ####
+###################################
+
+###GM###
+#GAM model
+Asl_AllAnxTd_Bifactors_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+    +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Bifactors_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllAnxTd_Gm_Mood <- sapply(Asl_AllAnxTd_Bifactors_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Gm_Psych <- sapply(Asl_AllAnxTd_Bifactors_Gm, function(v) summary(v)$p.table[5,4])
+Asl_AllAnxTd_Gm_Ext <- sapply(Asl_AllAnxTd_Bifactors_Gm, function(v) summary(v)$p.table[6,4])
+Asl_AllAnxTd_Gm_Phb <- sapply(Asl_AllAnxTd_Bifactors_Gm, function(v) summary(v)$p.table[7,4])
+Asl_AllAnxTd_Gm_OverallPsy <- sapply(Asl_AllAnxTd_Bifactors_Gm, function(v) summary(v)$p.table[8,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllAnxTd_Bifactors_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Bifactors_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_Lobes_Mood <- sapply(Asl_AllAnxTd_Bifactors_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_Lobes_Psych <- sapply(Asl_AllAnxTd_Bifactors_Lobes, function(v) summary(v)$p.table[5,4])
+Asl_AllAnxTd_Lobes_Ext <- sapply(Asl_AllAnxTd_Bifactors_Lobes, function(v) summary(v)$p.table[6,4])
+Asl_AllAnxTd_Lobes_Phb <- sapply(Asl_AllAnxTd_Bifactors_Lobes, function(v) summary(v)$p.table[7,4])
+Asl_AllAnxTd_Lobes_OverallPsy <- sapply(Asl_AllAnxTd_Bifactors_Lobes, function(v) summary(v)$p.table[8,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_Lobes_Mood_fdr <- p.adjust(Asl_AllAnxTd_Lobes_Mood,method="fdr")
+Asl_AllAnxTd_Lobes_Psych_fdr <- p.adjust(Asl_AllAnxTd_Lobes_Psych,method="fdr")
+Asl_AllAnxTd_Lobes_Ext_fdr <- p.adjust(Asl_AllAnxTd_Lobes_Ext,method="fdr")
+Asl_AllAnxTd_Lobes_Phb_fdr <- p.adjust(Asl_AllAnxTd_Lobes_Phb,method="fdr")
+Asl_AllAnxTd_Lobes_OverallPsy_fdr <- p.adjust(Asl_AllAnxTd_Lobes_OverallPsy,method="fdr")
+
+
+##ROIs###
+#GAM model
+Asl_AllAnxTd_Bifactors_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = AllAnxTdSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllAnxTd_Bifactors_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllAnxTd_ROIs_Mood <- sapply(Asl_AllAnxTd_Bifactors_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllAnxTd_ROIs_Psych <- sapply(Asl_AllAnxTd_Bifactors_ROIs, function(v) summary(v)$p.table[5,4])
+Asl_AllAnxTd_ROIs_Ext <- sapply(Asl_AllAnxTd_Bifactors_ROIs, function(v) summary(v)$p.table[6,4])
+Asl_AllAnxTd_ROIs_Phb <- sapply(Asl_AllAnxTd_Bifactors_ROIs, function(v) summary(v)$p.table[7,4])
+Asl_AllAnxTd_ROIs_OverallPsy <- sapply(Asl_AllAnxTd_Bifactors_ROIs, function(v) summary(v)$p.table[8,4])
+
+#FDR correct p-values
+Asl_AllAnxTd_ROIs_Mood_fdr <- p.adjust(Asl_AllAnxTd_ROIs_Mood,method="fdr")
+Asl_AllAnxTd_ROIs_Psych_fdr <- p.adjust(Asl_AllAnxTd_ROIs_Psych,method="fdr")
+Asl_AllAnxTd_ROIs_Ext_fdr <- p.adjust(Asl_AllAnxTd_ROIs_Ext,method="fdr")
+Asl_AllAnxTd_ROIs_Phb_fdr <- p.adjust(Asl_AllAnxTd_ROIs_Phb,method="fdr")
+Asl_AllAnxTd_ROIs_OverallPsy_fdr <- p.adjust(Asl_AllAnxTd_ROIs_OverallPsy,method="fdr")
+
+
+
+###############################
+###############################
+######### ASL ANALYSES  #######
+##### Full sample (n=1601) ####
+###############################
+###############################
+
+#############################
+#### STATE TRAIT ANXIETY ####
+#############################
+
+###GM###
+#GAM model
+Asl_AllSubj_Stai_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = staiSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Stai_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllSubj_Gm_State <- sapply(Asl_AllSubj_Stai_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Gm_Trait <- sapply(Asl_AllSubj_Stai_Gm, function(v) summary(v)$p.table[5,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllSubj_Stai_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = staiSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Stai_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllSubj_Lobes_State <- sapply(Asl_AllSubj_Stai_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Lobes_Trait <- sapply(Asl_AllSubj_Stai_Lobes, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_AllSubj_Lobes_State_fdr <- p.adjust(Asl_AllSubj_Lobes_State,method="fdr")
+Asl_AllSubj_Lobes_Trait_fdr <- p.adjust(Asl_AllSubj_Lobes_Trait,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllSubj_Stai_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + State_General + Trait_General, list(i = as.name(x))), data = staiSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Stai_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllSubj_ROIs_State <- sapply(Asl_AllSubj_Stai_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_ROIs_Trait <- sapply(Asl_AllSubj_Stai_ROIs, function(v) summary(v)$p.table[5,4])
+
+#FDR correct p-values
+Asl_AllSubj_ROIs_State_fdr <- p.adjust(Asl_AllSubj_ROIs_State,method="fdr")
+Asl_AllSubj_ROIs_Trait_fdr <- p.adjust(Asl_AllSubj_ROIs_Trait,method="fdr")
+
+
+
+############################
+#### TRAIT ANXIETY ONLY ####
+############################
+
+###GM###
+#GAM model
+Asl_AllSubj_Trait_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = staiSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Trait_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllSubj_Gm_TraitOnly <- sapply(Asl_AllSubj_Trait_Gm, function(v) summary(v)$p.table[4,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllSubj_Trait_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = staiSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Trait_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllSubj_Lobes_TraitOnly <- sapply(Asl_AllSubj_Trait_Lobes, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllSubj_Lobes_TraitOnly_fdr <- p.adjust(Asl_AllSubj_Lobes_TraitOnly,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllSubj_Trait_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Trait_General, list(i = as.name(x))), data = staiSubjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Trait_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllSubj_ROIs_TraitOnly <- sapply(Asl_AllSubj_Trait_ROIs, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllSubj_ROIs_TraitOnly_fdr <- p.adjust(Asl_AllSubj_ROIs_TraitOnly,method="fdr")
+
+
+
+##############################################
+#### CORRELATED TRAITS- NOT AGE REGRESSED ####
+##############################################
+
+###GM###
+#GAM model
+Asl_AllSubj_CorrTrMood_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrPsych_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrExt_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrFear_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = subjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_CorrTrMood_Gm, summary)
+lapply(Asl_AllSubj_CorrTrPsych_Gm, summary)
+lapply(Asl_AllSubj_CorrTrExt_Gm, summary)
+lapply(Asl_AllSubj_CorrTrFear_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllSubj_Gm_CorrTrMood <- sapply(Asl_AllSubj_CorrTrMood_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Gm_CorrTrPsych <- sapply(Asl_AllSubj_CorrTrPsych_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Gm_CorrTrExt <- sapply(Asl_AllSubj_CorrTrExt_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Gm_CorrTrFear <- sapply(Asl_AllSubj_CorrTrFear_Gm, function(v) summary(v)$p.table[4,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllSubj_CorrTrMood_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrPsych_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrExt_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrFear_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = subjData)
+})
+
+
+#Look at the model summaries
+lapply(Asl_AllSubj_CorrTrMood_Lobes, summary)
+lapply(Asl_AllSubj_CorrTrPsych_Lobes, summary)
+lapply(Asl_AllSubj_CorrTrExt_Lobes, summary)
+lapply(Asl_AllSubj_CorrTrFear_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllSubj_Lobes_CorrTrMood <- sapply(Asl_AllSubj_CorrTrMood_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Lobes_CorrTrPsych <- sapply(Asl_AllSubj_CorrTrPsych_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Lobes_CorrTrExt <- sapply(Asl_AllSubj_CorrTrExt_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Lobes_CorrTrFear <- sapply(Asl_AllSubj_CorrTrFear_Lobes, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllSubj_Lobes_CorrTrMood_fdr <- p.adjust(Asl_AllSubj_Lobes_CorrTrMood,method="fdr")
+Asl_AllSubj_Lobes_CorrTrPsych_fdr <- p.adjust(Asl_AllSubj_Lobes_CorrTrPsych,method="fdr")
+Asl_AllSubj_Lobes_CorrTrExt_fdr <- p.adjust(Asl_AllSubj_Lobes_CorrTrExt,method="fdr")
+Asl_AllSubj_Lobes_CorrTrFear_fdr <- p.adjust(Asl_AllSubj_Lobes_CorrTrFear,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllSubj_CorrTrMood_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Mood, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrPsych_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Psychosis, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrExt_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Externalizing, list(i = as.name(x))), data = subjData)
+})
+
+Asl_AllSubj_CorrTrFear_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Fear, list(i = as.name(x))), data = subjData)
+})
+
+
+#Look at the model summaries
+lapply(Asl_AllSubj_CorrTrMood_ROIs, summary)
+lapply(Asl_AllSubj_CorrTrPsych_ROIs, summary)
+lapply(Asl_AllSubj_CorrTrExt_ROIs, summary)
+lapply(Asl_AllSubj_CorrTrFear_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllSubj_ROIs_CorrTrMood <- sapply(Asl_AllSubj_CorrTrMood_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_ROIs_CorrTrPsych <- sapply(Asl_AllSubj_CorrTrPsych_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_ROIs_CorrTrExt <- sapply(Asl_AllSubj_CorrTrExt_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_ROIs_CorrTrFear <- sapply(Asl_AllSubj_CorrTrFear_ROIs, function(v) summary(v)$p.table[4,4])
+
+#FDR correct p-values
+Asl_AllSubj_ROIs_CorrTrMood_fdr <- p.adjust(Asl_AllSubj_ROIs_CorrTrMood,method="fdr")
+Asl_AllSubj_ROIs_CorrTrPsych_fdr <- p.adjust(Asl_AllSubj_ROIs_CorrTrPsych,method="fdr")
+Asl_AllSubj_ROIs_CorrTrExt_fdr <- p.adjust(Asl_AllSubj_ROIs_CorrTrExt,method="fdr")
+Asl_AllSubj_ROIs_CorrTrFear_fdr <- p.adjust(Asl_AllSubj_ROIs_CorrTrFear,method="fdr")
+
+
+
+###################################
+#### PSYCHOPATHOLOGY BIFACTORS ####
+###################################
+
+###GM###
+#GAM model
+Asl_AllSubj_Bifactors_Gm <- lapply(Asl_Gm_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = subjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Bifactors_Gm, summary)
+
+#Create a vector p-values (no FDR correction for bc only one DV)
+Asl_AllSubj_Gm_Mood <- sapply(Asl_AllSubj_Bifactors_Gm, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Gm_Psych <- sapply(Asl_AllSubj_Bifactors_Gm, function(v) summary(v)$p.table[5,4])
+Asl_AllSubj_Gm_Ext <- sapply(Asl_AllSubj_Bifactors_Gm, function(v) summary(v)$p.table[6,4])
+Asl_AllSubj_Gm_Phb <- sapply(Asl_AllSubj_Bifactors_Gm, function(v) summary(v)$p.table[7,4])
+Asl_AllSubj_Gm_OverallPsy <- sapply(Asl_AllSubj_Bifactors_Gm, function(v) summary(v)$p.table[8,4])
+
+
+###LOBES###
+#GAM model
+Asl_AllSubj_Bifactors_Lobes <- lapply(Asl_Lobe_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = subjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Bifactors_Lobes, summary)
+
+#Create a vector p-values
+Asl_AllSubj_Lobes_Mood <- sapply(Asl_AllSubj_Bifactors_Lobes, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_Lobes_Psych <- sapply(Asl_AllSubj_Bifactors_Lobes, function(v) summary(v)$p.table[5,4])
+Asl_AllSubj_Lobes_Ext <- sapply(Asl_AllSubj_Bifactors_Lobes, function(v) summary(v)$p.table[6,4])
+Asl_AllSubj_Lobes_Phb <- sapply(Asl_AllSubj_Bifactors_Lobes, function(v) summary(v)$p.table[7,4])
+Asl_AllSubj_Lobes_OverallPsy <- sapply(Asl_AllSubj_Bifactors_Lobes, function(v) summary(v)$p.table[8,4])
+
+#FDR correct p-values
+Asl_AllSubj_Lobes_Mood_fdr <- p.adjust(Asl_AllSubj_Lobes_Mood,method="fdr")
+Asl_AllSubj_Lobes_Psych_fdr <- p.adjust(Asl_AllSubj_Lobes_Psych,method="fdr")
+Asl_AllSubj_Lobes_Ext_fdr <- p.adjust(Asl_AllSubj_Lobes_Ext,method="fdr")
+Asl_AllSubj_Lobes_Phb_fdr <- p.adjust(Asl_AllSubj_Lobes_Phb,method="fdr")
+Asl_AllSubj_Lobes_OverallPsy_fdr <- p.adjust(Asl_AllSubj_Lobes_OverallPsy,method="fdr")
+
+
+###ROIs###
+#GAM model
+Asl_AllSubj_Bifactors_ROIs <- lapply(Asl_ROI_List, function(x) {
+    gam(substitute(i ~ s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + goassessItemBifactor4FactorMood +  goassessItemBifactor4FactorPsych +  goassessItemBifactor4FactorExt
+        +  goassessItemBifactor4FactorPhb +  goassessItemBifactor4FactorOverallPsy, list(i = as.name(x))), data = subjData)
+})
+
+#Look at the model summaries
+lapply(Asl_AllSubj_Bifactors_ROIs, summary)
+
+#Create a vector p-values
+Asl_AllSubj_ROIs_Mood <- sapply(Asl_AllSubj_Bifactors_ROIs, function(v) summary(v)$p.table[4,4])
+Asl_AllSubj_ROIs_Psych <- sapply(Asl_AllSubj_Bifactors_ROIs, function(v) summary(v)$p.table[5,4])
+Asl_AllSubj_ROIs_Ext <- sapply(Asl_AllSubj_Bifactors_ROIs, function(v) summary(v)$p.table[6,4])
+Asl_AllSubj_ROIs_Phb <- sapply(Asl_AllSubj_Bifactors_ROIs, function(v) summary(v)$p.table[7,4])
+Asl_AllSubj_ROIs_OverallPsy <- sapply(Asl_AllSubj_Bifactors_ROIs, function(v) summary(v)$p.table[8,4])
+
+#FDR correct p-values
+Asl_AllSubj_ROIs_Mood_fdr <- p.adjust(Asl_AllSubj_ROIs_Mood,method="fdr")
+Asl_AllSubj_ROIs_Psych_fdr <- p.adjust(Asl_AllSubj_ROIs_Psych,method="fdr")
+Asl_AllSubj_ROIs_Ext_fdr <- p.adjust(Asl_AllSubj_ROIs_Ext,method="fdr")
+Asl_AllSubj_ROIs_Phb_fdr <- p.adjust(Asl_AllSubj_ROIs_Phb,method="fdr")
+Asl_AllSubj_ROIs_OverallPsy_fdr <- p.adjust(Asl_AllSubj_ROIs_OverallPsy,method="fdr")

@@ -1,0 +1,48 @@
+##########################
+#### CLUSTER ANALYSES ####
+##########################
+
+#setwd('~/Desktop/BBL/')
+setwd('/data/joy/BBL')
+
+#Read in data
+subjData<-readRDS("./projects/pncAslAcrossDisorder/subjectData/n833_JLF_connVox11andUp_subjData_clusters.rds")
+
+#Load library for nonlinear analyses and plotting
+library(mgcv)
+library(visreg)
+library(ggfortify)
+library(ggplot2)
+
+#### OVERALL PSYC ####
+
+Model1<-lm(LM_OverallPsy_dACC_conn_RightCaudate ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + restRelMeanRMSMotion + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+
+Model2<-lm(LM_OverallPsy_dACC_conn_LeftCaudate ~ age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + restRelMeanRMSMotion + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology,data=subjData)
+
+
+###############
+#### PLOTS ####
+###############
+
+#Colors used: #329444 = green (OverallPsych), #325194 = blue (Anxious-Misery), #943282 = purple (Psychosis), #B3141C = red (Behavioral), #F58311 = orange (Fear)
+
+#Figure 4a and 4b: Connectivity by OverallPsy
+#green line
+jpeg(file = "./projects/pncAslAcrossDisorder/TablesFigures/Conn_OverallPsy_dACC_RightCaudate_scatterplot.jpg")
+par(mar=c(5,5,2,2),mgp=c(3.3,1,0))
+visreg(Model1, "Bifactor_Overall_Psychopathology", ylab = "dACC-Right Caudate Connectivity z(r)", xlab = "Overall Psychopathology (z)", 
+       cex.lab=1.75, font.lab=2, cex.axis=1.5, fill=list(col="#C8E6C9"), line=list(col="#329444"))
+dev.off()
+
+#green line
+jpeg(file = "./projects/pncAslAcrossDisorder/TablesFigures/Conn_OverallPsy_dACC_LeftCaudate_scatterplot.jpg")
+par(mar=c(5,5,2,2),mgp=c(3.3,1,0))
+visreg(Model2, "Bifactor_Overall_Psychopathology", ylab = "dACC-Left Caudate Connectivity z(r)", xlab = "Overall Psychopathology (z)", 
+       cex.lab=1.75, font.lab=2, cex.axis=1.5, fill=list(col="#C8E6C9"), line=list(col="#329444"))
+dev.off()
+
+
+##visreg options
+#mar – A numeric vector of length 4, which sets the margin sizes in the following order: bottom, left, top, and right. The default is c(5.1, 4.1, 4.1, 2.1).
+#mgp – A numeric vector of length 3, which sets the axis label locations relative to the edge of the inner plot window. The first value represents the location the labels (i.e. xlab and ylab in plot), the second the tick-mark labels, and third the tick marks. The default is c(3, 1, 0).

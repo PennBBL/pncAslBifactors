@@ -1,0 +1,23 @@
+#Merge the connectivity data file paths with the subject-level data file.
+
+###############################
+### n976 (11 and up sample) ###
+###############################
+
+#Read in subject data
+subjData<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData.rds")
+dACCPaths<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n976_dorsalACC_conPaths.csv", header=FALSE)
+rACCPaths<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n976_rostralACC_conPaths.csv", header=FALSE)
+restQA<-read.csv("/data/joy/BBL/studies/pnc/n1601_dataFreeze2016/neuroimaging/rest/n1601_RestQAData.csv", header=TRUE)
+
+#Add headers to paths files
+names(dACCPaths) <- c("bblid", "dACCPath")
+names(rACCPaths) <- c("bblid", "rACCPath")
+
+#Merge paths data
+data.merge <- merge(subjData, dACCPaths, by="bblid", all=FALSE)
+data.merge2 <- merge(data.merge, rACCPaths, by="bblid", all=FALSE)
+data.merge3 <- merge(data.merge2, restQA, by="bblid", all=FALSE)
+
+#Save file.
+saveRDS(data.merge3, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n976_JLF_aslVox11andUp_subjData_conPaths.rds")

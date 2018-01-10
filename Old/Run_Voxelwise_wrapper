@@ -1,0 +1,73 @@
+#Copy and paste the following to the command line:
+#Open qlogin session (3 cores and 50.5 and 50G of memory seem to be needed to get this script to run)
+qloginp3 -l h_vmem=50.5G,s_vmem=50.0G
+
+###LINEAR###
+#Linear model with all bifactors, covariates=age, ageSq, sex, relMeanRMSmotion.
+subjDataName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/subjectData/ASL_subjectData/n1274_ASL_datarel_020716_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults"
+namePaths="aslPath"
+maskName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/masks/n1895_inc1829_bin_gm_mask.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+relMeanRMSmotion+goassessItemBifactor4FactorMood+goassessItemBifactor4FactorPsych+goassessItemBifactor4FactorExt+goassessItemBifactor4FactorPhb+goassessItemBifactor4FactorOverallPsy"
+logfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+errfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+
+
+#Call linear model wrapper (takes about one hour to finish)
+Rscript /data/joy/BBL/applications/groupAnalysis/lm_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 3 -s 0
+
+###LINEAR###
+#Linear model with OverallPsych only, covariates=age, ageSq, sex, relMeanRMSmotion.
+subjDataName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/subjectData/ASL_subjectData/n1274_ASL_datarel_020716_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults"
+namePaths="aslPath"
+maskName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/masks/n1895_inc1829_bin_gm_mask.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+relMeanRMSmotion+goassessItemBifactor4FactorOverallPsy"
+logfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+errfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+
+
+#Call linear model wrapper (takes about one hour to finish)
+Rscript /data/joy/BBL/applications/groupAnalysis/lm_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 3 -s 0
+
+
+
+#GAM model with all bifactors and covariates=s(age), sex, s(age,by=sex), relMeanRMSmotion
+subjDataName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/subjectData/ASL_subjectData/n1274_ASL_datarel_020716_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults"
+namePaths="aslPath"
+maskName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/masks/n1895_inc1829_bin_gm_mask.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+relMeanRMSmotion+goassessItemBifactor4FactorMood+goassessItemBifactor4FactorPsych+goassessItemBifactor4FactorExt+goassessItemBifactor4FactorPhb+goassessItemBifactor4FactorOverallPsy"
+logfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+errfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+pAdjustMethod="fdr"
+
+#Call gam wrapper
+Rscript /data/joy/BBL/applications/groupAnalysis/gam_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 3 -s 0 -a $pAdjustMethod -d TRUE
+
+
+#GAM model with OverallPsych only and covariates=s(age), sex, s(age,by=sex), relMeanRMSmotion
+subjDataName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/subjectData/ASL_subjectData/n1274_ASL_datarel_020716_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults"
+namePaths="aslPath"
+maskName="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/masks/n1895_inc1829_bin_gm_mask.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+relMeanRMSmotion+goassessItemBifactor4FactorOverallPsy"
+logfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+errfile="/data/joy/BBL/projects/pncT1AcrossDisorder_Kaczkurkin/aslResults/logs"
+pAdjustMethod="fdr"
+
+#Call gam wrapper
+Rscript /data/joy/BBL/applications/groupAnalysis/gam_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 3 -s 0 -a $pAdjustMethod -d TRUE
+

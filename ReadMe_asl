@@ -1,0 +1,552 @@
+################################################
+###### ASL Across Disorder Analysis Steps ######
+################################################
+
+###################
+#### PREP DATA ####
+###################
+
+1. Use the script "AcrossDisorder_asl_JLF_dataPrep.R" to pre-process the data. This script will:
+   a. Load/merge all subject data files, apply ASL exclusion criteria, and remove the two subjects who are missing their bifactor scores.
+   b. Create variables for lobes.
+   c. Create diagnostic factor variables (1 for diagnosis, 0 for TD) in order to compute effect sizes later.
+   d. Save the subject-level rds file.
+   e. Subset the data to look at All Anxiety vs TD and Coarse Anxiety (OCD, PTSD, Anx) vs TD; save separately for anxiety only analyses.
+   f. Subset the data by 12 years and up; save the file separately for STAI analyses.
+   g. Subset the data by the additional voxelwise ASL exclusion criteria for voxelwise analyses. 
+   h. Subset the voxelwise data by 11 years and up; save the file separately for proband analyses.
+   i. Subset the voxelwise data by sex; save males and females in separate files.
+   j. Subset the n1274 voxelwise data to remove those on psychoactive psychiatric meds (for sensitivity analyses, n=1135)
+   k. Subset the n1042 11 and up voxelwise data to remove those on psychoactive psychiatric meds (for sensitivity analyses, n=922)
+   l. Subset the n1042 11 and up voxelwise data to remove those not meeting restboldExclude criteria (n=833) for connectivity analyses. 
+2. After this script is done running, check that the variables of interest (esp. pcaslRelMeanRMSMotion, restRelMeanRMSMotion) are numeric and not strings, since some variables have "NA" instead of "." for missing data, which R reads as a string variable. 
+      is.numeric(subjData$age)
+      is.factor(subjData$sex)
+      is.numeric(subjData$pcaslRelMeanRMSMotion)
+      is.numeric(subjData$restRelMeanRMSMotion)
+      is.numeric(subjData$Bifactor_Mood)
+      is.numeric(subjData$Bifactor_Psychosis)
+      is.numeric(subjData$Bifactor_Externalizing)
+      is.numeric(subjData$Bifactor_Fear)
+      is.numeric(subjData$Bifactor_Overall_Psychopathology)
+
+
+##########################################
+#### Run GM, LOBE, AND ROI GAM MODELS ####
+##########################################
+
+###UPDATE###
+
+1. Run the script, "AcrossDisorder_JLF_asl_GamAnalyses.R". This script will:
+   a. Run GAM models for the JLF ASL data.
+      1. Samples used:
+         a. All Anxiety only (Agoraphobia, Gad, OCD, Panic, PTSD, Separation anxiety, Social anxiety, Specific Phobia)
+         b. All Anxiety (Agoraphobia, Gad, OCD, Panic, PTSD, Separation anxiety, Social anxiety, Specific Phobia) and TD
+         c. 12 and up sample (for STAI)
+         d. Full sample
+      2. Dependent variables:
+         a. GM
+         b. Lobes (no cerebellum)
+         c. ROIs
+      2. Independent variables:
+         a. AllAnx vs. TD (AllAnx and TD sample only)
+         b. Coarse Anxiety (PTSD and Anxiety) vs. TD (AllAnx and TD sample only)
+         c. STAI
+            1. State and Trait
+            2. Trait alone
+         d. Correlated traits (not age regressed)
+         e. Psychopathology bifactor (not age regressed)
+      3. Covariates: s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion
+   b. FDR correct GAM model p-values.
+ 
+
+###################################
+#### Voxelwise Volume Analyses ####
+###################################
+
+GAM Voxelwise Wikipedia: https://github.com/PennBBL/groupAnalysis/wiki/Gam_Voxelwise
+
+1. Create a list of bblids and scanids using script, "Get_bblids_scanids.R".
+
+2. Run the script, "FindMissingAsl.sh".
+   a. This script will create lists of scanids that are missing an ASL nii.gz file in the data freeze folder on chead. 
+      NOTE: No subjects in our sample were missing data.
+
+3. Create an .Rds file containing scanids and paths to each subject's ASL image using the script, "GetAslPaths.sh".
+      
+4. Use script, "MergeAslPaths.R" to merge the ASL paths into the subject-level rds file and save.
+
+5. To run the GAM or linear voxelwise wrapper:
+   a. See file "Run_Voxelwise_wrapper" for commands
+      1. Open a qlogin session (3 cores and 50.5 and 50Gb of memory seem to be needed to get this script to run; 58 Gb is needed if requesting residual output; takes about 5.5 hours to finish)
+      	      qloginp3 -l h_vmem=58.5G,s_vmem=58.0G
+      2. Define the input (see wrapper file)
+      3. Run the GAM wrapper with qlogin
+   b. Alternatively, you could use qsub to run the script
+
+
+#########################
+#### FLAMEO Analyses ####
+#########################
+
+1. Use the script "linearFlameoWrapper.R" to run linear models using flameo.
+   a. First, need to change the parameters section to the model you want to test.
+2. Cluster correct the data (see next section)
+   a. Use the res4d.nii.gz file to estimate the smoothness of the data.
+   b. Then use the smoothness estimates in 3dClustSim to find the min cluster size.
+   c. Apply the min cluster size to the data using easythresh.
+
+
+############################
+#### CLUSTER CORRECTION ####
+############################
+
+1. Cluster correct the ASL voxelwise results:
+   a. See the file "3dClustSim_script" for the commands to calculate the cluster size threshold for the ASL voxelwise data.
+      1. This file will provide commands for estimating the smoothness of the residuals with 3dFWHMx.
+      2. And it provides commands for calculating the minimum cluster size with 3dClustSim.
+      	 NOTE: I chose a voxelwise p of .001 (z of 3.09) and a cluster probability of .01 (smoothness estimated with -FWHM without -ACF), giving us a 2-sided (NN1) cluster size of 54 using the flameo residuals.
+   b. Use easythresh script "easyThresh3dClustSim.sh" to apply this cluster correction to the data.
+
+          cd to the voxelwise results folder
+          /data/joy/BBL/projects/pncAslAcrossDisorder/scripts/easyThresh3dClustSim.sh zstat10.nii.gz 3.09 54
+
+   c. To see what survives cluster correction:
+      1. First open the easythresh folder and look at the table of interest (e.g., "cluster_lmZ_Bifactor_Overall_Psychopathology_3.09_1.txt")
+         a. We will only interpret clusters that exceed our minimum cluster size (e.g., 54)
+      2. In another window, open the results in fslview (e.g., "cluster_mask_lmZ_Bifactor_Overall_Psychopathology_3.09_1.nii.gz")
+         a. The min and max in fslview correspond to the number of clusters in your table (e.g., 0 to 28).
+         b. To see only the clusters that survive cluster correction, find the cluster number that exceeds your min cluster size on the table and set your min value in fslview to one less than this number.
+            (e.g., if only clusters 26-28 have 48 or more voxels, the set the min to 25 and the max to 28 in fslview to only see those clusters).
+      3. NOTE: Don't use FSL atlas labels (e.g., Harvard-Oxford) with the ASL voxelwise data results! These atlases are only for MNI space and are not correct in non-MNI space. We'll warp our results into MNI space next under "Make Publication-Quality Brain Images."
+
+(2). Or apply FDR correction (NOTE: the gam wrapper can apply FDR correction, if requested).
+    a. Apply FDR correction to results using fsl utility "fdr"
+    a. copy the script "FDR_correction.sh" to the results folder
+    b. cd to the results folder
+    c. create a list of the gamP* filenames:
+       ls gamP* > filenames.txt
+       or
+       ls lmP* > filenames.txt
+    d. Double check that the path name to the results folder is correct in the script "FDR_correction.sh"; this script will
+       1. Output the probability threshold (this tells you the FDR threshold; p-values below that threshold are significant)
+       2. Calculate 1 minus the FDR threshold
+       3. Create an FDR corrected image using the 1-FDR threshold for ease of display
+    e. View the results
+       1. Open the z-map in fslview using the following standard image:
+       /data/joy/BBL/templates/pncRavensTemplate/dramms_ravens_template_2mm.nii.gz
+       2. Critical z-values and corresponding p-values (one-tail):
+          a. z=1.645 p=.05
+          b. z=1.96  p=.025
+          c. z=2.33  p=.01
+          d. z=2.58  p=.005
+          e. z=3.09  p=.001
+       3. Or to see the FDR corrected results, open the thresh_fdr_1minusP_gamP_*.nii.gz file on the same standard image as above.
+          a. This map only shows the regions that survive FDR correction.
+
+
+###############################################
+#### MAKE PUBLICATION-QUALITY BRAIN IMAGES ####
+###############################################
+
+1. Make masks with one signif cluster in each mask (so we only see one signif cluster in each image)
+   a. Threshold the easythresh cluster mask so that only one of the significant clusters (those with 54 or more voxels) remains in each mask:
+      1. This will lower threshold (-thr) and upper threshold (-uthr) the clusters to save one cluster at a time.
+         a. -thr : use following number to threshold current image (zero anything below the number)
+         b. -uthr : use following number to upper-threshold current image (zero anything above the number)
+  
+         #ASL OverallPsy
+         fslmaths cluster_mask_zstat10_3.09_1.nii.gz -thr 55 -uthr 55 cluster_mask_zstat10_3.09_p01_dACC.nii.gz
+         fslmaths cluster_mask_zstat10_3.09_1.nii.gz -thr 56 -uthr 56 cluster_mask_zstat10_3.09_p01_rACC.nii.gz
+         fslmaths cluster_mask_zstat10_3.09_1.nii.gz -thr 57 -uthr 57 cluster_mask_zstat10_3.09_p01_parahipp.nii.gz
+         fslmaths cluster_mask_zstat10_3.09_1.nii.gz -thr 58 -uthr 58 cluster_mask_zstat10_3.09_p01_midbrain.nii.gz
+         fslmaths cluster_mask_zstat10_3.09_1.nii.gz -thr 59 -uthr 59 cluster_mask_zstat10_3.09_p01_postcentGyr.nii.gz
+         
+         #Connectivity OverallPsy
+         fslmaths cluster_mask_zstat10Neg_3.09_1.nii.gz -thr 32 -uthr 32 cluster_mask_zstat10Neg_3.09_p01_Lcaudate.nii.gz
+         fslmaths cluster_mask_zstat10Neg_3.09_1.nii.gz -thr 35 -uthr 35 cluster_mask_zstat10Neg_3.09_p01_Rcaudate.nii.gz
+         
+2. Mask the z-stat file by these signif only cluster masks using the script "MaskByClustermask.sh" (of for connectivity "MaskByClustermask_conn.sh")
+
+3. Warp to MNI space 
+   a. cd to the easythresh folder. Use the following command to:
+      1. Warp the single cluster masked zstat file to MNI space
+      2. Upsample the 2mm file to 1mm so you can overlay on a higher resolution brain in fslview
+
+#ASL Overall Psy
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_OverallPsy_dACC_3.09_clsz54.nii.gz -i zstat10_3.09_p01_dACC.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_OverallPsy_rACC_3.09_clsz54.nii.gz -i zstat10_3.09_p01_rACC.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+#Connectivity OverallPsy
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_OverallPsy_conn_Lcaudate_3.09_clsz54.nii.gz -i zstat10_3.09_p01_Lcaudate.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_OverallPsy_conn_Rcaudate_3.09_clsz54.nii.gz -i zstat10_3.09_p01_Rcaudate.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+4. Take screen shots of images
+    a. Open template (MNI152_T1_1mm_brain.nii.gz) and overlay (lmZ_MNI1mm_OverallPsy_dACC_3.09_clsz54.nii.gz) in fslview 
+      (min=0, max=4 b/c this data has already been cluster-masked at z=3.09 and p=.01)
+    b. Make the screen as large as possible, switch view to the largest images, toggle cross-hairs off, and take a screen shot.
+    c. Record the coordinates (x,y,z) for future reference.
+5. Alternatively, you could cp the template and overlay onto the local computer using sftp and use Mango or Caret to create images.
+
+
+###################################################
+#### HOW TO CREATE A GRADIENT BAR IN PHOTOSHOP ####
+###################################################
+1. Open Photoshop
+2. Go to File
+   a. New...
+   b. Make a custom canvas that is 4 inches (width) and .5 inches (height) and 300 pix/inch. OK.
+   c. With your brain image open, select the Eyedropper Tool.
+   d. Select the two colors from the brain image you want to create a gradient with (usually the brightest and darkest colors).
+      1. NOTE: You will have to click on the "Set Foreground" buttons on the toolbar to switch back and forth between background and foreground colors.
+   e. Click on the gradient tool. On the top toolbar (the one that runs across the top of the window), choose the Gradient Picker dropdown menu (may look like a rainbow)
+   f. Choose the first box (Foreground to Background). You should see a small preview of what your gradient will look like.
+   g. Next, select the Gradient Tool and draw a horizontal line across your white canvas.
+   h. Choose the Rectangular Selection Tool and select the entire gradient.
+   i. Copy and paste into a new canvas.
+   j. Choose the Move Tool and hold shift while dragging on the image corners to lock the ratio while resizing.
+
+
+########################################################
+#### MAKE PUBLICATION QUALITY BRAIN IMAGES IN CARET ####
+########################################################
+
+1. Get the MNI cluster-masked z-stat file for projecting onto caret.
+   a. Method 1:
+      1. Threshold the cluster mask output by easythresh to only the clusters that are significant (greater than 54)
+
+      	 fslmaths cluster_mask_zstat10_3.09_1.nii.gz -thr 55 cluster_mask_zstat10_3.09_cls54_signifOnly.nii.gz
+
+      2. Mask the original z-stat file by the signif only cluster mask using the script "MaskByClustermask.sh"
+   b. Method 2: 
+      1. Just use the z-stat file output by easythresh (zstat10_3.09_clsz54.nii.gz) which is already masked by the cluster mask and only keeps significant clusters.
+   c. Both Methods will produce the exact same results
+  
+2. Warp your cluster-masked z-stat file into MNI space for caret:
+
+#OverallPsy
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_OverallPsy_3.09_clsz54.nii.gz -i zstat10_3.09_clsz54.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+#Psychosis
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_Psychosis_3.09_clsz54.nii.gz -i zstat7_3.09_clsz54.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+#Fear
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_Fear_3.09_clsz54.nii.gz -i zstat9_3.09_clsz54.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+Or use the NearestNeighbor option (although this tends to look pixelated and has a restricted range of colors). NOTE: I chose not to use NearestNeighbor.
+
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o lmZ_MNI1mm_OverallPsy_3.09_clsz54.nii.gz -i zstat10_3.09_clsz54.nii.gz -n NearestNeighbor -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+ 
+3. Use sftp to download the MNI space file to the local computer (the file will be in Machintosh HD/Users/antoniak or look for them in "All My Files").
+   
+get /data/joy/BBL/projects/pncAslAcrossDisorder/results/n1042_AslPath/age_sex_pcaslRelMeanRMSMotion_Bifactor_Mood_Bifactor_Psychosis_Bifactor_Externalizing_Bifactor_Fear_Bifactor_Overall_Psychopathology/easythresh_3.09_54/lmZ_MNI1mm_OverallPsy_3.09_clsz54.nii.gz
+
+4. Open Caret (Applications/caret/bin_macosx64/caret5)
+   a. If opening a spec file for the first time:
+      1. Go to File -> Open Spec file...
+      2. Computer/Applications/caret/data_files/standard_mesh_atlases/standard_mesh_atlases_TED/Human.PALS.RIGHT
+      3. Load
+   b. Or if you have already opened a spec file before: 
+      1. File -> Open recent Spec file
+      2. Load
+   c. Go to Attributes -> Map volume(s) to surface(s)
+      1. Choose Metric
+      2. Add Volume from disk
+      3. Map to caret with atlas
+      4. Space: Choose FLIRT
+      5. Atlas: Choose the hemisphere that matches the spec file you loaded. Only select Show Mapping to Average Fiducial Surface.
+      6. Keep choosing Next until you get to the Mapping Algorithm. 
+      	 a. For ASL z-stat maps, choose: METRIC_MAXIMUM_VOXEL
+	 b. For NMF components, choose: Metric enclosing voxel
+	 c. Metric interpolated voxel?
+      7. Finish. Close summary box.
+   d. On the caret diaglog box:
+      1. Click on D/C
+      2. Primary Overlay, Data type: Choose Metric. Select your z-stat map.
+      	 a. NOTE: You can load multiple maps at the same time.
+      3. At the top of the D/C page, change Page Selection to Metric Settings
+      	 a. Click on User scale, make Pos Min/Max = 3.09 and 4.00
+
+
+##########################
+#### CLUSTER ANALYSES ####
+##########################
+
+1. Identify the cluster numbers for all regions that were significantly associated with the predictor of interest (e.g., OverallPsy) during voxelwise analyses
+   a. Open cluster_lmZ_Bifactor_Overall_Psychopathology_3.09_1.txt for a table of the clusters.
+   b. Look at "Cluster Index": you only want the clusters that had 54 or more voxels.
+   c. Using the Max x,y,z coordinates from this table, you can also navigate to the brain clusters to see their Harvard Atlas names.
+2. Or you can also get the cluster index by clicking on a cluster of interest
+   a. Open cluster_mask_lmZ_Bifactor_Overall_Psychopathology_3.09_1.nii.gz in fslview (need 2mm standard image to overlay on)
+   b. Look at the "intensity" value in the lower left hand corner of fslview.
+3. Save the clusters as variables in the subject level rds file using the script "clusterMeans.R".        
+   a. First, specify one of the cluster numbers of interest in the script (clsVal) and define the cluster's variable name (e.g., GAM_asl_OverallPsy_dorsalACC) 
+   b. Run the clsVis script to calculate the mean value in that cluster for each subject and append the variable to the subject data file.
+   c. Next, in clsVis_aslGamAnalyses.R change 
+   subjDataName<-"/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1029_JLF_aslVox11andUp_subjData.rds
+   to
+   subjDataName<-"/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1029_JLF_aslVox11andUp_subjData_clusters.rds
+   so that subsequent clusters are saved in the same file. Then change the cluster number and var name and run clsVis again. 
+   d. Repeat until all clusters of interest are saved with their own variables.
+4. Next, use the script "ClusterAnalyses.R" to look for higher order interactions in regions found during voxelwise analyses to have a significant relationship with OverallPsy.
+   a. This will also create jpegs of:
+      1. The main effect scatterplots for voxelwise results (Figure 2)
+      2. The significant age*sex interaction scatterplots
+
+
+###########################################
+#### Effect Sizes, Tables, and Figures ####
+###########################################
+
+1. Run the script, "EffectSizes_TablesFigures.R" to:
+   a. Calculate means, sds, percentage of females, percentage of white, and Ns for all diagnoses.
+   b. Create Table 1 (demographics by screening diagnosis category)
+   c. Create Figure X (correlated traits by screening diagnosis category; not being used in the paper)
+   d. Create Figure 1 (bifactors by screening diagnosis category)
+   e. Subset the data for each diagnosis with N>20.
+      1. Run the linear models with lsmeans to get covariate-adjusted means (NOTE: lsmeans won't run with a GAM model)
+         a. If lsmeans is not installed, then use this command: install.packages("lsmeans", repos="http://R-Forge.R-project.org")
+      2. Compute covariate-adjusted effect sizes (Cohens d).
+      3. Create Supplemental Figure ? (Effect sizes in regions by screening diagnosis)
+2. To create Figure X (Correlations between Correlated Traits and Bifactors), use the script "CorrMatrix.R".
+
+
+##############################
+#### SENSITIVITY ANALYSES ####
+##############################
+
+1. Subset the n1042 11 and up voxelwise data with the clusters of interest (n1042_JLF_aslVox11andUp_subjData_clusters.rds) to remove those on psychoactive psychiatric meds (for sensitivity analyses, n=922)
+   a. Use the script, "SubsetForClusterSensitivityAnalyses.R"
+2. Run the script, "ClusterAnalyses_sensitivity.R" for cluster sensitivity analyses on the n922 subjects without psychoactive psychotropic meds and with mom edu and race as additional covariates. 
+
+
+##################################
+#### GMD SPECIFICITY ANALYSES ####
+##################################
+
+1. This is to test whether there are any effects in GMD in the exact same clusters found to be associated with OverallPsy in the ASL data.
+   a. Use the scripts "GetGmdPaths.sh" to get a list of the gmd paths
+   b. Merge with the n=1042 subject data with "MergeGmdPaths.R"
+   c. Run linearFlameoWrapper.R to merge the gmd images into a fourd file.
+2. Find the GMD cluster means.
+   a. You will apply the ASL cluster mask to the GMD data to see if there are any GMD effects in the clusters found signif in the ASL analyses.
+   b. Use the script "clusterMeans_gmd.R".
+4. Test for significant results using these cluster means.
+   a. Use the script "ClusterAnalyses_gmd.R".
+   b. This will run the models and fdr correct across tests.
+
+
+######################
+#### NMF ANALYSES ####
+######################
+
+1. Get the list of ASL file names that passed the pcaslVoxelwiseExclude, t1Exclude, and healthExclude criteria from the data freeze folder using the script "GetAslFileNames.sh".
+   a. We only want the filenames, not the paths, in this case.
+2. Zip the files
+       cd /data/joy/BBL/studies/pnc/n1601_dataFreeze2016/neuroimaging/asl/voxelwiseMaps_cbf
+       tar -cvf /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1029_aslVox11andUp.tar.gz -T /data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1029_aslFileNames.csv
+3. Then copy them to CBICA
+      ssh kaczkura@cbica-cluster.uphs.upenn.edu
+      cd /cbica/home/sattertt/n1029_pnc_asl/pncAsl_notMaskedForNMF
+      mkdir n1029_aslVox11andUp
+      scp -r akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1029_aslVox11andUp.tar.gz /cbica/home/sattertt/n1029_pnc_asl/pncAsl_notMaskedForNMF/n1029_aslVox11andUp
+4. Extract the files (can also delete the tar file)
+      tar -xvf n1029_aslVox11andUp.tar.gz
+      rm n1029_aslVox11andUp.tar.gz
+5. Permissions
+      1. To allow others permission to access the directory, use:
+      chmod 777 n1029_aslVox11andUp
+6. Create a text file with the image paths on CBICA. See script, "GetFilePaths.sh" on cbica.
+7. Copy the ASL mask from chead to cbica
+      scp akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz /cbica/home/sattertt/n1029_pnc_asl/pncAsl_notMaskedForNMF/n1029_aslVox11andUp
+8. Run the sge script "submit_script_extractBasesMT.sh" using the following qsub call (or use script Run_NMF.sh to run NMF with a range of components):
+   NOTE: the number refers to the number of components to calculate.
+   qsub ./submit_script_extractBasesMT.sh /cbica/home/sattertt/n1029_pnc_asl/pncAsl_notMaskedForNMF/n1029_aslVox11andUp/n1029_aslVox11andUp.csv 2 /cbica/home/kaczkura/pncAslAcrossDisorder/NMF/sge_job_output /cbica/home/sattertt/n1029_pnc_asl/pncAsl_notMaskedForNMF/n1029_aslVox11andUp/n1601_PcaslCoverageMask_GM.nii.gz
+9. Calculate reconstruction error:
+   a. After running a range of components (2-30, evens), you need to calculate the reconstruction error to help you to determine the ideal number of components to use.
+   	 ssh -Y kaczkura@cbica-cluster.uphs.upenn.edu
+	 cd pncAslAcrossDisorder/NMF/scripts/
+	 matlab -nodesktop
+	 addpath('/sbia/sbiasfw/external/matlab/extras/nifti/20130306/')
+	 calcRecError
+   The script will run for a few minutes and then the reconstruction error figures should pop up. 
+10. Look at the results
+    cd /cbica/home/sattertt/n279_pnc_Ravens_nassarPrematurity/sge_job_output
+	  fslview /cbica/home/kaczkura/pncAslAcrossDisorder/NMF/images/pnc_template_brain_2mm.nii.gz $(for i in {1..22}; do echo `ls NumBases22/OPNMF/niiImg/Basis_${i}.nii ` -b 0.004,0.04 -l Hot ; done) &
+
+
+######################################################
+#### MAKE PUBLICATION QUALITY NMF IMAGES IN CARET ####
+######################################################
+
+1. Zip the NMF files that correspond to the Number of components that you decided to use based on the reconstruction error figures.
+      ssh kaczkura@cbica-cluster.uphs.upenn.edu
+      cd /cbica/home/sattertt/n279_pnc_Ravens_nassarPrematurity/sge_job_output/NumBases22/OPNMF/niiImg
+      tar -czvf NMF_22.tar.gz Basis_*
+2. Copy the zipped file to chead.
+      scp -r NMF_22.tar.gz akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/images/NMF_nassarPrematurity
+3. Unzip the files
+      ssh chead
+      cd /data/joy/BBL/projects/pncAslAcrossDisorder/images/NMF_nassarPrematurity
+      tar -xvf NMF_22.tar.gz
+4. View the results in fslview
+      fslview /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz $(for i in {1..22}; do echo `ls NMF_${i}.nii.gz ` -b 0.004,0.04 -l Hot ; done) &
+5. Convert the NMF component files to MNI space (for caret)
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o NMF_1.nii.gz -i Basis_1.nii -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+6. 
+
+
+######################
+#### SVR ANALYSES ####
+######################
+
+**UPDATE**
+
+1. Use the script "SVR_analyses.R" to run SVR analyses on the MARS volume data.
+    a. This script will:
+       1. Regress covariates out of the predicted variable (goassessItemBifactor4FactorOverallPsy)
+       2. Regress covariates out of volumetric MARS data
+       3. Define a function to run 10 fold SVR
+       4. Run the models
+       5. Calculate the correlation between predicted overall psych from SVR and actual overallPsych
+       	  a. We want a correlation of at least .2 before proceeding.
+
+
+###########################
+#### MATRIX REGRESSION ####
+###########################
+
+**UPDATE**
+
+1. Use the script "MatrixRegressionAnalyses.R" to run matrix regression on the MARS volume data.
+    a. Before running this script, you need to make sure you have the following:
+       1. A subject level data file.
+       2. A fourd_4mm.nii.gz file
+       	  a. To get this file, you can just downsample the fourd.nii.gz file (which is already 2mm) that outputs with the gam and linear wrappers.
+	          fslmaths fourd.nii.gz -subsamp2 fourd_4mm.nii.gz
+       3. A bblids.csv list with a header "bblid"
+       	  a. Just save the bblid.csv file that outputs with the gam and linear wrappers as bblids.csv with the header "bblid".
+       4. A mask (we used the mask: /data/joy/BBL/templates/pncRavensTemplate/dramms_ravens_template_mask_4mm.nii.gz). To get 4mm mask:
+       	    	 fslmaths dramms_ravens_template_mask_2mm.nii.gz -subsamp2 -thr 0.05 -bin dramms_ravens_template_mask_4mm.nii.gz
+       NOTE: THE ORDER OF SUBJECTS MUST BE IDENTICAL IN THE BBLIDS.CSV FILE AND THE FOURD.NII.GZ FILE
+    b. This script will:
+       1. Load the file and calcuate the euclidean distances.  
+       2. Run models with adonis = analysis of variance using distance matrices; runs linear models; takes about an hour to run.
+       	  a. For partitioning distance matrices among sources of variation and fitting linear models (e.g., factors, polynomial regression) to distance matrices; uses a permutation test with pseudo-F ratios.
+
+
+###############
+#### MIDAS ####
+###############
+
+1. MIDAS detects multivariate neuroimaging patterns related to a continuous subject-level variable.
+    a. Using the subject level data file with the asl paths (created for gam voxelwise analyses), run the flameo wrapper "linearFlameoWrapper.R" to get the res4D file output.
+       NOTE: this res4D file is already masked with the mask specified in the flameo script.
+    b. Make a res4dFiles folder in images/
+    c. Use the script "SplitRes4d.sh" (need qlogin -l h_vmem=50.5G,s_vmem=50.0G for this to run) to: 
+       1. Split the res4D file into individual subject res4D files.
+       2. Combine the bblids and res4d filenames into a single file for getting asl paths on cbica later.
+       	  NOTE: It is crucial that you use the bblid.txt from the flameo wrapper to ensure that the bblids are in the same order as when the res4d group file was made.
+    d. Next, need to copy ASL images to CBICA.
+       1. Zip the files
+       	      tar -cvf /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1029_aslVox11andUp_res4d.tar.gz -T n1029_res4d_filenames.txt
+       2. Then copy them to CBICA
+       	      ssh kaczkura@cbica-cluster.uphs.upenn.edu
+	      mkdir /cbica/home/sattertt/n1029_pnc_asl/pncAsl_res4dForMIDAS
+      	      scp akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1029_aslVox11andUp_res4d.tar.gz /cbica/home/sattertt/n1029_pnc_asl/pncAsl_res4dForMIDAS
+       3. Extract the files on cbica (can also delete the tar file)
+      	      tar -xvf n1029_aslVox11andUp_res4d.tar.gz
+      	      rm n1029_aslVox11andUp_res4d.tar.gz
+       4. Permissions
+       	  a. Change the permissions of all files in the images directory to be very liberal.
+      	      chmod 777 pncAsl_res4dForMIDAS
+    e. Prepare data for MIDAS
+       1. Copy the bblid_res4d list from chead to cbica
+       	       scp akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/images/res4dFiles/n1029_bblids_res4d.csv /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/subjectData
+       2. Copy the subject level data to cbica
+       	       scp akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1029_JLF_aslVox11andUp_subjData_aslPaths.rds /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/subjectData 
+       3. On cbica, use the script "GetAslPathsCbica.sh" to get a the cbica ASL paths.
+       4. Use the script, "prepareAslDataForMidas.R" on cbica to set up the subject data file for MIDAS.
+       	      a. This script will:
+              	 1. Load the subject-level data and cbica asl path file.
+          	 4. Merge the subject data with the cbica asl paths.
+          	 5. Subset the data to only the variables used in MIDAS (cbicaAslPath should be the first variable in the .csv file).
+		    NOTE: we do not have any covariates in our variable list because we already regressed them out using flameo.
+          	 6. Remove subjects who are missing OverallPsy scores (MIDAS cannot handle missing data).
+		 7. Save the file on cbica.
+    f. Copy the ASL template from chead to cbica (for use by mat2nii later):
+       	    scp akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/studies/pnc/template/pnc_template_brain_2mm.nii.gz /cbica/home/kaczkura/pncAslAcrossDisorder/images
+    g. cd to the scripts folder and run MIDAS with the following command (takes about an hour to an hour and half to run; you can request up to 150G per qsub): 
+       a. NOTE: Erdem said that MIDAS cannot handle covariates that depend on one another (like age and ageSq or interactions); also, he suggests having only having one psych variable (like OverallPsy) in the model at a time.
+ 
+qsub-run --sge '-l h_vmem=75G' ./midas_script.sh -d /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/subjectData/n1028_JLF_aslVox11andUp_MIDAS.csv -o /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/n1029_MIDAS_results -g cbicaAslPath,goassessItemBifactor4FactorOverallPsy
+
+    h. The output is called "*.mat" in the output folder
+       1. The function "mat2nii" will convert the mat file to a nifti file (make sure mat2nii.m is saved in the output directory). 
+       	  a. The output.mat file is structured such that map.p{1} are the p-values for the statistical test related to the first covariate you supplied, 
+	     map.p{2} are the p-values for the 2nd covariate, etc.
+	  b. Likewise, map.stat{1} is the midas statistic for the regression with respect to the first covariate, and map.stat{2} is the one for the 2nd covariate, etc 
+	     	1. This variable shows direction (negative or positive with respect to the covariate).
+	  c. To save each predictor's p-values in matlab (NOTE: I only had one predictor because we already regressed out the covariates with flameo):
+	     cd /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/n1029_MIDAS_results
+             matlab -nodesktop
+	     load('/cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/n1029_MIDAS_results/n1029_MIDAS_results.mat') 
+	     mat2nii(map.p{1}, '/cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/images/pnc_template_brain_2mm.nii.gz', 'p_goassessItemBifactor4FactorOverallPsy')
+	  d. Do the same for the stats 
+             mat2nii(map.stat{1}, '/cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/images/pnc_template_brain_2mm.nii.gz', 'stat_goassessItemBifactor4FactorOverallPsy')
+    i. View the results
+       a. Copy the pnc template into the results folder.
+       	  scp akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/scripts/easyThresh3dClustSim.sh /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/n1029_MIDAS_results
+       b. Open the .nii file you just created in afni to view the results.
+       	  NOTE: The .nii file has NaN's in it, so nothing will show if opened with fslview. 
+    j. Cluster correct the results
+       a. Copy the easyThresh file to CBICA from chead
+       	    scp akaczkurkin@chead.uphs.upenn.edu:/data/joy/BBL/projects/pncAslAcrossDisorder/scripts/easyThresh3dClustSim.sh /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/scripts
+       b. Cluster correct the results with easythresh (using same parameters determined with 3dClustSim after voxelwise analyses)
+            cd /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/n1029_MIDAS_results
+            /cbica/home/kaczkura/pncAslAcrossDisorder/MIDAS/scripts/easyThresh3dClustSim.sh stat_goassessItemBifactor4FactorOverallPsy.nii 3.09 48
+
+
+###############################
+#### CONNECTIVITY ANALYSES ####
+###############################
+
+A. Connectivity analyses
+   1. Send Rastko the list of bblids that meet the exclusion criteria (including "restExcludeVoxelwise") using the script "GetConn_bblids_scanids.R".
+   2. He also needs a cluster mask with the seeds of interest.
+      
+      	 cd /n1044lm_Cov_age_sex_ageSq_ageandsex_ageSqandsex_pcaslRelMeanRMSMotion_Bifactor_Mood_Bifactor_Psychosis_Bifactor_Externalizing_Bifactor_Fear_Bifactor_Overall_Psychopathology/easythresh_3.09_54
+      	 fslmaths cluster_mask_lmZ_Bifactor_Overall_Psychopathology_3.09_1.nii.gz -thr 55 -uthr 56 cluster_mask_lmZ_Bifactor_OverallPsy_3.09_p01_ForConnectivity.nii.gz
+      
+      a. This will lower threshold (-thr) and upper threshold (-uthr) the clusters so that only the two clusters of interest remain (dorsal ACC (cluster 55) and rostral ACC (cluster 56)).
+      	 1. -thr : use following number to threshold current image (zero anything below the number)
+	 2. -uthr : use following number to upper-threshold current image (zero anything above the number)
+   3. When the connectivity analyses were done (n=976), Rastko gave us a link to the voxelwise seed maps in PNC template space (Fisher z-transformed maps are indicated as "zr")
+      a. Create merged maps and mean maps using the script "MeanMergedConnMaps.sh".
+      	 1. Mean maps are used to determine whether regions are positive or negative at baseline to help with interpretation of the direction of the connectivity results.
+   4. Use the flameo wrapper to run linear models (same variables as for the ASL data, except replace ASL motion with restbold motion)
+      a. To use the flameo wrapper:
+      	 1. You will need to get the paths to the connectivity data files. Use the script "GetConnPaths.sh".
+	 2. Merge the paths with the subject-level data with the script "MergeConnPaths.R".
+	 3. Mask the rest coverage mask by grey matter prior using the script "MaskByGM_conn.sh".
+	 4. Run flameo using the script "linearFlameoWrapper_connectivity.R".
+	    a. NOTE: the connectivity data were already smoothed with a FWHM of 6mm, so you do not need to smooth in the linear wrapper. Also, ovdba is an out-of-date option: keep set at zero.
+   5. Do cluster correction with the same parameters as the asl analyses (see Cluster Correction section).
+   6. Get brain images as before (see section "Make publication quality brain images")
+   7. Save clusters into subject level data file with script "clusterMeans_conn.R".
+   8. Make scatterplots for figure using script "ClusterAnalyses_conn.R".
+	 
+
+##############
+#### MISC ####
+##############
+A. To determine how many participants were excluded by each exclusion criteria, see the script "ParticipantsExcluded.R".
+B. To re-mask the asl coverage mask by a liberal gm mask:
+   1. Use the script "MaskByGM.sh"
+C.  
+D. To see how much space you are using on cbica, type:
+      du -sh kaczkura/
+E. Binarize the masks with the script "BinarizeClusterMasks.sh"
+F. To upsample a 2mm mask to a 1mm mask and convert from PNC space to MNI space ?

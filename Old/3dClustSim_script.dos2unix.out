@@ -1,0 +1,33 @@
+#To use AFNI's 3dClustSim, we need to know the smoothness of the time series noise. Use 3dFWHMx to estimate the smoothness of the data (takes about half an hour to run). 
+#This will use the 4D image with the detrend flag. Ideally, you would use the residuals, which Angel is working on adding to the GAM script. 
+#NOTE: You need a qlogin session of 50G (qlogin -l h_vmem=50.5G,s_vmem=50.0G) and the 64 bit call (below) to get this to work. 
+#Order of options matters in this case, the input file must come after -detrend and -ACF.
+
+/share/apps/afni/linux_xorg7_64_16.2.17/3dFWHMx -detrend -ACF -input /data/joy/BBL/projects/pncAslAcrossDisorder/results/n1029_AslPath_ACROSS.INCLUDE_smooth0/fourd.nii.gz -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz
+
+# ACF model parameters for a*exp(-r*r/(2*b*b))+(1-a)*exp(-r/c) plus effective FWHM
+# 0.423061  4.37492  11.8326     12.315
+
+/share/apps/afni/linux_xorg7_64_16.2.17/3dFWHMx -detrend -input /data/joy/BBL/projects/pncAslAcrossDisorder/results/n1029_AslPath_ACROSS.INCLUDE_smooth0/fourd.nii.gz -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz
+
+# FWHM done (0.00 CPU s thus far)
+# 7.71899  8.27782  6.80431
+
+
+#After 3dFWHMx is done running, take the three numbers that are output onto the command line (these are your smoothness estimates) and add them to your 3dClustSim command.
+#Specfically, you want the first three numbers after the ACF output:
+# ACF model parameters for a*exp(-r*r/(2*b*b))+(1-a)*exp(-r/c) plus effective FWHM
+# 0.423061  4.37492  11.8326     12.315
+
+#Use 3dClustSim for cluster correction (takes a long time to run: about an hour and half)
+#NOTE: I chose "-pthr LOTS -athr LOTS" to get a table of lots of p-value options rather than putting in specific p-values because Ted and I haven't settled on what our p-values are going to be yet. Ideally, we should know exactly what p-values we want before running 3dClustSim.
+
+/share/apps/afni/linux_xorg7_64_16.2.17/3dClustSim -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz -acf 0.423061  4.37492  11.8326 -iter 10000 -pthr LOTS -athr LOTS
+
+/share/apps/afni/linux_xorg7_64_16.2.17/3dClustSim -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz -fwhmxyz 7.71899  8.27782  6.80431 -iter 10000 -pthr .001 -athr .01
+
+#After 3dClustSim is done running, look at the tables. Decide whether you want NN1 (faces touch), NN2 (faces or edges touch), or NN3 (faces or edges or corners touch).
+#NOTE: I chose NN1 because it was the most stringent.
+#You also need to choose whether you want 1-sided, 2-sided, or bi-sided. See 3dClustSim documentation online for a description of each of these.
+#NOTE: I chose 1-sided for now, but may change this later.
+#After finding the cluster size threshold (the min number of voxels required for a cluster to be considered significant) based on your p-values and other choices (NN?, ?-sided), use this min cluster size in the script, "easyThresh3dClustSim.sh" to cluster correct the voxelwise maps.

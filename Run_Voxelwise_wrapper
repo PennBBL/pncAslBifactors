@@ -1,0 +1,387 @@
+#Open qlogin session (3 cores and 50.5 and 50Gb of memory seem to be needed to get this script to run; 58Gb is needed to save the residuals)
+qloginp3 -l h_vmem=58.5G,s_vmem=58.0G
+#Define the flag variables
+
+### Linear Analyses ###
+#MODEL: age + sex + I(scale(age, scale=FALSE, center=TRUE)^2) + age*sex + I(scale(age, scale=FALSE, center=TRUE)^2)*sex + pcaslRelMeanRMSMotion + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology
+#NOTE: We do not smooth the ASL data using the lm wrapper.
+
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model all subfactors (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model: OverallPsy only (MEM ALLOCATION ERROR)
+[1] "DONE: Residual timeseries"
+Warning message:
+In system("rm -f lm_residualMap_*.nii.gz") :
+  system call failed: Cannot allocate memory
+
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#Sensitivity analyses1
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model all subfactors PLUS mom edu and race (DONE) 
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+white+medu1+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#Sensitivity2
+#N=922 (11 and up asl voxelwise sample minus those on psychiatric psychotropic meds)
+#Bifactors model all subfactors (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n922_JLF_aslVox11andUpSensitivity_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#Sensitivity3
+#N=922 (11 and up asl voxelwise sample minus those on psychiatric psychotropic meds)
+#Bifactors model all subfactors PLUS mom edu and race (MEM ALLOCATION ERROR)
+Warning message:
+In system("rm -f lm_residualMap_*.nii.gz") :
+  system call failed: Cannot allocate memory
+
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n922_JLF_aslVox11andUpSensitivity_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+white+medu1+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+##########################################################################################################################################################################
+
+#N=468 (11 and up asl voxelwise male only sample)
+#Bifactors model all subfactors ()
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n468_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=574 (11 and up asl voxelwise female only sample)
+#Bifactors model all subfactors ()
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n574_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=1042 (11 and up asl voxelwise sample)
+#Correlated traits, each in separate models
+MOOD_CorrTraits (MEM ALLOCATION ERROR)                                    
+PSYCHOSIS_CorrTraits (MEM ALLOCATION ERROR)                               
+EXTERNALIZING_CorrTraits (MEM ALLOCATION ERROR)
+FEAR_CorrTraits (MEM ALLOCATION ERROR)
+
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+FEAR_CorrTraits"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=1274 (full asl voxelwise sample)
+# All bifactors (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1274_JLF_aslVox_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#Call lm wrapper
+#use -d TRUE to skip merging the images into a fourd file if this has already been done before
+#use -r TRUE to print out the residuals to use for cluster correction
+
+Rscript /data/joy/BBL/applications/groupAnalysis/version3/lm_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 1 -s 0 -a $pAdjustMethod -r TRUE
+
+Rscript /data/joy/BBL/applications/groupAnalysis/lm_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 1 -s 0 -a $pAdjustMethod -d TRUE
+
+
+#################################################################################################################################################################################
+
+##GMD Specificity analyses (in each signif cluster found for OverallPsy associated with ASL)
+
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model all subfactors (ERROR)
+#dACC, no averageManualRating, no mprage_antsCT_vol_TBV
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_gmdPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="GmdPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/results/n1042_AslPath/age_sex_pcaslRelMeanRMSMotion_Bifactor_Mood_Bifactor_Psychosis_Bifactor_Externalizing_Bifactor_Fear_Bifactor_Overall_Psychopathology/easythresh_3.09_54/cluster_mask_zstat10_3.09_p01_dACC_bin.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model all subfactors (not tried)
+#dACC, with averageManualRating, no mprage_antsCT_vol_TBV
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_gmdPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="GmdPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/results/n1042_AslPath/age_sex_pcaslRelMeanRMSMotion_Bifactor_Mood_Bifactor_Psychosis_Bifactor_Externalizing_Bifactor_Fear_Bifactor_Overall_Psychopathology/easythresh_3.09_54/cluster_mask_zstat10_3.09_p01_dACC_bin.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+averageManualRating+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model all subfactors (not tried)
+#dACC, with averageManualRating and mprage_antsCT_vol_TBV
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_gmdPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="GmdPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/results/n1042_AslPath/age_sex_pcaslRelMeanRMSMotion_Bifactor_Mood_Bifactor_Psychosis_Bifactor_Externalizing_Bifactor_Fear_Bifactor_Overall_Psychopathology/easythresh_3.09_54/cluster_mask_zstat10_3.09_p01_dACC_bin.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~age+sex+ageSq+age*sex+ageSq*sex+averageManualRating+mprage_antsCT_vol_TBV+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+
+#Call lm wrapper
+#use -d TRUE to skip merging the images into a fourd file if this has already been done before
+#use -r TRUE to print out the residuals to use for cluster correction
+
+Rscript /data/joy/BBL/applications/groupAnalysis/version3/lm_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 1 -s 0 -a $pAdjustMethod -d TRUE -r TRUE
+
+
+#################################################################################################################################################################################
+
+### Gam Analyses ###
+#MODEL: s(age) + sex + s(age,by=sex) + pcaslRelMeanRMSMotion + Bifactor_Mood + Bifactor_Psychosis + Bifactor_Externalizing + Bifactor_Fear + Bifactor_Overall_Psychopathology
+#NOTE: We do not smooth the ASL data using the gam wrapper.
+
+#N=1042	(11 and up asl voxelwise sample)
+#Bifactors model all subfactors (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model: OverallPsy only (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#Sensitivity analyses
+#N=1042 (11 and up asl voxelwise sample)
+#Bifactors model all subfactors PLUS mom edu and race (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+white+medu1+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#Sensitivity2
+#N=922 (11 and up asl voxelwise sample minus those on psychiatric psychotropic meds)
+#Bifactors model all subfactors (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n922_JLF_aslVox11andUpSensitivity_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#Sensitivity3
+#N=922 (11 and up asl voxelwise sample minus those on psychiatric psychotropic meds)
+#Bifactors model all subfactors PLUS mom edu and race (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n922_JLF_aslVox11andUpSensitivity_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+white+medu1+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+
+###########################################################################################################################################
+
+#N=1042 (11 and up asl voxelwise sample)
+#Correlated traits, each in separate models
+MOOD_CorrTraits (DONE)
+PSYCHOSIS_CorrTraits (DONE)
+EXTERNALIZING_CorrTraits (MEM ALLOCATION ERROR)
+FEAR_CorrTraits (MEM ALLOCATION ERROR)
+
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+FEAR_CorrTraits"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=1042 (11 and up asl voxelwise sample)
+#STAI model (SKIPPED)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+State_General+Trait_General"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+
+
+#################################################################################################################################
+
+#N=1274 (full asl voxelwise sample) (DONE)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1274_JLF_aslVox_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+sex+s(age,by=sex)+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+
+#N=587 (male only asl voxelwise sample) (SKIPPED)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n587_JLF_aslVoxMale_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+#N=687 (female only asl voxelwise sample) (SKIPPED)
+subjDataName="/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n687_JLF_aslVoxFemale_subjData_aslPaths.rds"
+OutDirRoot="/data/joy/BBL/projects/pncAslAcrossDisorder/results"
+namePaths="AslPath"
+maskName="/data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz"
+smooth=0
+inclusionName="ACROSS.INCLUDE"
+subjID="bblid"
+covsFormula="~s(age)+pcaslRelMeanRMSMotion+Bifactor_Mood+Bifactor_Psychosis+Bifactor_Externalizing+Bifactor_Fear+Bifactor_Overall_Psychopathology"
+logfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+errfile="/data/joy/BBL/projects/pncAslAcrossDisorder/results/logs"
+pAdjustMethod="fdr"
+
+
+#Call gam wrapper (use -d TRUE to skip merging the images into a fourd file if this has already been done before). 
+
+Rscript /data/joy/BBL/applications/groupAnalysis/gam_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 3 -s 0 -d TRUE -a $pAdjustMethod
+
+Rscript /data/joy/BBL/applications/groupAnalysis/version3/gam_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 3 -s 0 -a $pAdjustMethod -d TRUE -r TRUE
+
+#Alternative to qlogin
+qsub -V -S /share/apps/R/R-3.1.1/bin/Rscript -cwd -o ${logfile} -e ${errfile} -binding linear:3 -pe unihost 3 -l h_vmem=50.5G,s_vmem=50.0G /data/joy/BBL/applications/groupAnalysis/gam_voxelwise.R -c $subjDataName -o $OutDirRoot -p $namePaths -m $maskName -i $inclusionName -u $subjID -f $covsFormula -n 3 -s 3.4

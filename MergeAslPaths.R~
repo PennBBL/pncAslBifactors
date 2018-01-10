@@ -1,0 +1,144 @@
+#Merge ASL paths with subject-level data files.
+
+#########################################
+### n1274 (full asl voxelwise sample) ###
+#########################################
+
+#Read in subject data
+subjData<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1274_JLF_aslVox_subjData.rds")
+aslPaths<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1274_aslVox_aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPaths) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.merge <- merge(subjData, aslPaths, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.merge, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1274_JLF_aslVox_subjData_aslPaths.rds")
+
+
+################################
+### n1042 (11 and up sample) ###
+################################
+
+#Read in subject data
+subjData11<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData.rds")
+aslPaths11<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_aslVox11andUp_aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPaths11) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.merge11 <- merge(subjData11, aslPaths11, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.merge11, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1042_JLF_aslVox11andUp_subjData_aslPaths.rds")
+
+
+#####################################################
+### n1274 (full asl voxelwise sample) Sensitivity ###
+#####################################################
+
+#Read in subject data
+subjData_Sensitivity<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1135_JLF_aslVoxSensitivity_subjData.rds")
+aslPaths_Sensitivity<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1135_aslVoxSensitivity_aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPaths_Sensitivity) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.merge_Sensitivity <- merge(subjData_Sensitivity, aslPaths_Sensitivity, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.merge_Sensitivity, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n1135_JLF_aslVoxSensitivity_subjData_aslPaths.rds")
+
+
+############################################
+### n1042 (11 and up sample) Sensitivity ###
+############################################
+
+#Read in subject data
+subjData11_Sensitivity<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n922_JLF_aslVox11andUpSensitivity_subjData.rds")
+aslPaths11_Sensitivity<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n922_aslVox11andUpSensitivity_aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPaths11_Sensitivity) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.merge11_Sensitivity <- merge(subjData11_Sensitivity, aslPaths11_Sensitivity, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.merge11_Sensitivity, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n922_JLF_aslVox11andUpSensitivity_subjData_aslPaths.rds")
+
+
+###############################
+### n587 (male only sample) ###
+###############################
+
+#Read in subject data
+subjDataMale<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n587_JLF_aslVoxMale_subjData.rds")
+aslPathsMale<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n587_aslVoxMale__aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPathsMale) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.mergeMale <- merge(subjDataMale, aslPathsMale, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.mergeMale, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n587_JLF_aslVoxMale_subjData_aslPaths.rds")
+
+
+#################################
+### n687 (female only sample) ###
+#################################
+
+#Read in subject data
+subjDataFemale<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n687_JLF_aslVoxFemale_subjData.rds")
+aslPathsFemale<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n687_aslVoxFemale_aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPathsFemale) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.mergeFemale <- merge(subjDataFemale, aslPathsFemale, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.mergeFemale, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n687_JLF_aslVoxFemale_subjData_aslPaths.rds")
+
+
+#########################################
+### n468 (11 and up male only sample) ###
+#########################################
+
+#Read in subject data
+subjDataMale11<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n468_JLF_aslVox11andUpMale_subjData.rds")
+aslPathsMale11<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n468_aslVox11andUpMale_aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPathsMale11) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.mergeMale11 <- merge(subjDataMale11, aslPathsMale11, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.mergeMale11, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n468_JLF_aslVox11andUpMale_subjData_aslPaths.rds")
+
+
+###########################################
+### n574 (11 and up female only sample) ###
+###########################################
+
+#Read in subject data
+subjDataFemale11<-readRDS("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n574_JLF_aslVox11andUpFemale_subjData.rds")
+aslPathsFemale11<-read.csv("/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n574_aslVox11andUpFemale_aslPaths.csv", header=FALSE)
+
+#Add headers to aslPaths file
+names(aslPathsFemale11) <- c("scanid", "AslPath")
+
+#Merge Asl paths data
+data.mergeFemale11 <- merge(subjDataFemale11, aslPathsFemale11, by="scanid", all=TRUE)
+
+#Save file.
+saveRDS(data.mergeFemale11, "/data/joy/BBL/projects/pncAslAcrossDisorder/subjectData/n574_JLF_aslVox11andUpFemale_subjData_aslPaths.rds")

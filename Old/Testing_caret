@@ -1,0 +1,19 @@
+#TEST 1: warp the orig zstat file into MNI space (without cluster masking; keep in 2mm)
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_2mm_brain.nii.gz -o TEST1.nii.gz -i zstat10.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+#TEST 2: warp the orig zstat file into MNI space (without cluster masking; transform to 1mm)
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o TEST2.nii.gz -i zstat10.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+#TEST 3: warp the cluster-masked zstat file (created by easythresh) into MNI space (includes only signif clusters; transform to 1mm)
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o TEST3.nii.gz -i zstat10_3.09_clsz54.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+#TEST 4: warp the cluster-masked zstat file (created by me) into MNI space (includes only signif clusters; transform to 1mm)
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o TEST4.nii.gz -i zstat10_maskedByClusterMask.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+#TEST 5: warp the cluster-masked zstat file (created by me) into MNI space (includes only signif clusters; transform to 1mm; add nearest neighbor interpolation)
+antsApplyTransforms -e 3 -d 3 -r /share/apps/fsl/5.0.8/data/standard/MNI152_T1_1mm_brain.nii.gz -o TEST5.nii.gz -i zstat10_maskedByClusterMask.nii.gz -n NearestNeighbor -t /data/joy/BBL/studies/pnc/template/pnc2mni0Warp.nii.gz -t /data/joy/BBL/studies/pnc/template/pnc2mni1GenericAffine.mat
+
+##NOTES:
+#Tests 1 and 2 are fairly similar. The 1mm is slightly less pixelated in caret.
+#Tests 3 and 4 are identical.
+#Tests 4 and 5: Test 5 (NearestNeighbor) seems more pixelated and the colors are flatter.

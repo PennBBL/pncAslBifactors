@@ -1,0 +1,64 @@
+#################################
+#### ESTIMATE THE SMOOTHNESS ####
+#################################
+
+#To use AFNI's 3dClustSim, we need to know the smoothness of the time series noise. Use 3dFWHMx to estimate the smoothness of the data.  
+#NOTE: You need a qlogin session of at least 50G (qlogin -l h_vmem=50.5G,s_vmem=50.0G) and the 64 bit call (below) to get this to work (with qlogin -l h_vmem=58.5G,s_vmem=58.0G, this takes about 13 minutes to run; number of cores doesn't seem to make a difference)
+#Order of options matters in this case, the input file must come after -detrend and -ACF.
+#The ACF option will give you both the ACF smoothness estimates and the old FWHM estimates.
+
+#This will use the 4D image with the detrend flag. Ideally, you would use the residuals.
+/share/apps/afni/linux_xorg7_64_16.2.17/3dFWHMx -detrend -ACF -input /data/joy/BBL/projects/pncAslAcrossDisorder/results/n1029_AslPath_ACROSS.INCLUDE_smooth0/fourd.nii.gz -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz
+
+#For use with the res4d file output from the flameo wrapper.
+/share/apps/afni/linux_xorg7_64_16.2.17/3dFWHMx -ACF -input /data/joy/BBL/projects/pncAslAcrossDisorder/results/n922_AslPath/age_sex_pcaslRelMeanRMSMotion_Bifactor_Mood_Bifactor_Psychosis_Bifactor_Externalizing_Bifactor_Fear_Bifactor_Overall_Psychopathology/res4d.nii.gz -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz
+
+#For use with the residual map that outputs from the new lm and gam wrappers.
+/share/apps/afni/linux_xorg7_64_16.2.17/3dFWHMx -ACF -input /data/joy/BBL/projects/pncAslAcrossDisorder/results/n1044_AslPath_ACROSS.INCLUDE_smooth0/n1044gam_Cov_sage_sex_sagebysex_pcaslRelMeanRMSMotion_white_medu1_Bifactor_Mood_Bifactor_Psychosis_Bifactor_Externalizing_Bifactor_Fear_Bifactor_Overall_Psychopathology/gam_residualMap.nii.gz -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz
+
+
+#####################################
+#### CALCULATE MIN CLUSTER SIZES ####
+#####################################
+
+#After 3dFWHMx is done running, copy and save the output from the command line into a .txt file (for reference).
+#Then take the three numbers that are output onto the command line (these are your smoothness estimates) and add them to your 3dClustSim command.
+#Specfically, you want the first three numbers after the ACF output. For example:
+# ACF model parameters for a*exp(-r*r/(2*b*b))+(1-a)*exp(-r/c) plus effective FWHM
+# 0.423061  4.37492  11.8326     12.315
+
+#Use 3dClustSim to calculate the min number of voxels for a cluster to be significant (output is saved in the folder you run this in).
+#NOTE: You need a qlogin session of at least 50G (qlogin -l h_vmem=50.5G,s_vmem=50.0G) and the 64 bit call (below) to get this to work (with qlogin -l h_vmem=58.5G,s_vmem=58.0G, this takes about 1.5 hours to run).
+#Add "-pthr LOTS -athr LOTS" to get a table of lots of p-value options rather than putting in specific p-values
+
+/share/apps/afni/linux_xorg7_64_16.2.17/3dClustSim -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz -acf 0.312993 3.43378 8.2777 -iter 10000 -prefix n922lm_bifactors -both -pthr LOTS -athr LOTS
+
+######################################################################################################
+#OPTIONS FOR RUNNING
+
+#With -ACF (ideal but stringent)
+/share/apps/afni/linux_xorg7_64_16.2.17/3dClustSim -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz -acf 0.312993 3.43378 8.2777 -iter 10000 -prefix n1042lm_bifactors -both -pthr LOTS -athr LOTS
+
+#With the old -FWHM smoothness estimates
+/share/apps/afni/linux_xorg7_64_16.2.17/3dClustSim -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz -fwhmxyz 6.35871 7.26956 6.6284 -iter 10000 -prefix n1042lm_bifactors_FWHM -both -pthr LOTS -athr LOTS
+
+#Without estimating the smoothness
+/share/apps/afni/linux_xorg7_64_16.2.17/3dClustSim -mask /data/joy/BBL/projects/pncAslAcrossDisorder/images/n1601_PcaslCoverageMask_GM.nii.gz -fwhm 6 -iter 10000 -prefix n1042lm_bifactors_NoSmoothEst -both -pthr LOTS -athr LOTS
+
+
+######################################
+#### CHOOSE YOUR MIN CLUSTER SIZE ####
+######################################
+
+#After 3dClustSim is done running, look at the tables. Decide whether you want NN1 (faces touch), NN2 (faces or edges touch), or NN3 (faces or edges or corners touch).
+#NN1 will generally have the smallest clusters, while NN3 will have the largest (because some of the smaller ones might group into a larger one). The AFNI people at NIMH tend to focus on NN1, but it is up to you. 
+#NOTE: I chose NN1.
+
+#You also need to choose whether you want 1-sided, 2-sided, or bi-sided. See 3dClustSim documentation online for a description of each of these.
+#Whether to use 1-sided, 2-sided or bi-sided depends on what you are testing. For example, consider a t-test of A-B. Do you want to only positive results (where A > B)? If so, that is a 1-sided test. Otherwise, do you want the positives and negatives to cluster together? If so, that is a 2-sided test. Otherwise, you want both positives and negatives, but they should not cluster together. That is a bi-sided test. 
+#Bi-sided and 2-sided are almost identical when there is a high degree of smoothing. Bi-sided and 2-sided tend to require a smaller number of voxels per cluster than 1-sided.
+#NOTE: I chose 2-sided.
+
+#After finding the cluster size threshold (the min number of voxels required for a cluster to be considered significant) based on your p-values and other choices (NN?, ?-sided), use this min cluster size in the script, "easyThresh3dClustSim.sh" to cluster correct the voxelwise maps.
+#NOTE: Final parameters chosen: Voxelwise p=.001, cluster p=.01, Cluster size threshold (min clust size): 67 (flameo residuals).
+ 
